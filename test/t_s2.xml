@@ -1,0 +1,16 @@
+<xs:simpleType name="setDigitalPointType">
+    <xs:union>
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:enumeration value="on" />
+                <xs:enumeration value="off" />
+            </xs:restriction>
+        </xs:simpleType>
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:pattern value="[Oo][Nn]" />
+                <xs:pattern value="[Oo][Ff][Ff]" />
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:union>
+</xs:simpleType>

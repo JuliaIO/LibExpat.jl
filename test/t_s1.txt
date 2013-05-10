@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/" e2="second_element">
+    <Name>bucket</Name>
+    <Prefix/>
+    <Marker/>
+    
+    Some text between elements
+    
+    <![CDATA[ THIS IS 
+    
+    <<<<
+    
+        >>>>
+        
+    Whatever....
+    
+    CDATA ]]>
+    
+    
+    <MaxKeys>1000</MaxKeys>
+    <IsTruncated>false</IsTruncated>
+    <Contents>
+        C1C1C1
+        <Key>my-image.jpg</Key>
+        <LastModified>2009-10-12T17:50:30.000Z</LastModified>
+        <ETag>&quot;fba9dede5f27731c9771645a39863328&quot;</ETag>
+        <Size>434234</Size>
+        <StorageClass>STANDARD</StorageClass>
+        <Owner>
+            <ID idk="IDKV1">11111111111111111111111111111111</ID>
+            <DisplayName>mtd@amazon.com</DisplayName>
+        </Owner>
+    </Contents>
+    <Contents>
+        C2C2C2
+       <Key>my-third-image.jpg</Key>
+         <LastModified>2009-10-12T17:50:30.000Z</LastModified>
+        <ETag>&quot;1b2cf535f27731c974343645a3985328&quot;</ETag>
+        <Size>64994</Size>
+        <StorageClass>STANDARD</StorageClass>
+        <Owner>
+            <ID idk="IDKV2">222222222222222222222222222222222</ID>
+            <DisplayName>mtd@amazon.com</DisplayName>
+        </Owner>
+    </Contents>
+</ListBucketResult>
