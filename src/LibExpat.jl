@@ -23,7 +23,7 @@ type ParsedData
     name
     attr
     text
-    elements    # NOTE: This is a Any array of Any arrays....
+    elements    
     cdata
     parent
     in_cdata
