@@ -23,13 +23,13 @@ type ParsedData
     name
     attr
     text
-    elements
+    elements    # NOTE: This is a Any array of Any arrays....
     cdata
     parent
     in_cdata
     
     ParsedData() = ParsedData("")
-    ParsedData(name) = new(name, Dict{String, Any}(), "", Dict{String, Any}(), "", nothing, false)
+    ParsedData(name) = new(name, Dict{String, Any}(), "", {}, "", nothing, false)
 end
 
 type XPHandle
@@ -74,14 +74,21 @@ end
 
 function xp_geterror(xph::XPHandle)
     p = xph.parser
-    @DBG_PRINT (XML_GetErrorCode(p))
-    @DBG_PRINT (bytestring(XML_ErrorString(XML_GetErrorCode(p))))
+    ec = XML_GetErrorCode(p)
     
-    return  ( bytestring(XML_ErrorString(XML_GetErrorCode(p))), 
-            XML_GetCurrentLineNumber(p), 
-            XML_GetCurrentColumnNumber(p) + 1, 
-            XML_GetCurrentByteIndex(p) + 1
-        )
+    if ec != 0 
+        @DBG_PRINT (XML_GetErrorCode(p))
+        @DBG_PRINT (bytestring(XML_ErrorString(XML_GetErrorCode(p))))
+        
+        return  ( bytestring(XML_ErrorString(XML_GetErrorCode(p))), 
+                XML_GetCurrentLineNumber(p), 
+                XML_GetCurrentColumnNumber(p) + 1, 
+                XML_GetCurrentByteIndex(p) + 1
+            )
+     else
+        return  ( "", 0, 0, 0)
+     end 
+     
 end
 
 
@@ -94,7 +101,7 @@ end
 
 function start_cdata (p_xph::Ptr{Void}) 
     xph = unsafe_pointer_to_objref(p_xph)
-    @DBG_PRINT ("Found StartCdata")
+#    @DBG_PRINT ("Found StartCdata")
     xph.pdata.in_cdata = true
     return
 end
@@ -102,7 +109,7 @@ cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
 
 function end_cdata (p_xph::Ptr{Void}) 
     xph = unsafe_pointer_to_objref(p_xph)
-    @DBG_PRINT ("Found EndCdata")
+#    @DBG_PRINT ("Found EndCdata")
     xph.pdata.in_cdata = false
     return;
 end
@@ -119,7 +126,7 @@ function cdata (p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
         xph.pdata.text = xph.pdata.text * txt
     end
     
-    @DBG_PRINT ("Found CData : " * txt)
+#    @DBG_PRINT ("Found CData : " * txt)
     return;
 end
 cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{Uint8}, Cint))
@@ -151,23 +158,44 @@ function default_expand (p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
 end
 cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{Uint8}, Cint))
 
+function get_elements_by_name(el_list, name)
+    for e in el_list 
+        if (e[1].name == name) return e end
+    end
+    
+    return nothing
+
+end
+
 
 function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
     xph = unsafe_pointer_to_objref(p_xph)
     name = bytestring(name)
-    @DBG_PRINT ("Start Elem name : $name,  current element: $(xph.pdata.name) ")
+#    @DBG_PRINT ("Start Elem name : $name,  current element: $(xph.pdata.name) ")
     
     new_elem = ParsedData()
     new_elem.parent = xph.pdata 
     
     new_elem.name = name
+
+    elements_for_name = get_elements_by_name(xph.pdata.elements, name)
     
-    # Check to see if a child by that name already exists, if it does make it into an array
-    if haskey(xph.pdata.elements, name)
-        append!(xph.pdata.elements[name], {new_elem})
+    if elements_for_name != nothing 
+        append!(elements_for_name, {new_elem})
+#         print ("Added $name to $(xph.pdata.name)")
+#         par = xph.pdata.parent
+#         while par != nothing
+#             print (".$(par.name)")
+#             par = par.parent
+#         end
+#         println ("")
+        
+        @DBG_PRINT ("Added $name to $(xph.pdata.name)")
+        
     else
         # New entry
-        xph.pdata.elements[name] = {new_elem}
+        push!(xph.pdata.elements, {new_elem})
+        @DBG_PRINT ("New child $name in $(xph.pdata.name)")
     end
 
     xph.pdata = new_elem
@@ -185,6 +213,8 @@ function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Ui
             v = bytestring(attr)
             
             new_elem.attr[k] = v
+
+            @DBG_PRINT ("$k, $v in $name")
             
             i=i+1
             attr = unsafe_load(attrs_in, i)
@@ -199,7 +229,7 @@ cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Ptr
 function end_element (p_xph::Ptr{Void}, name::Ptr{Uint8})
     xph = unsafe_pointer_to_objref(p_xph)
     txt = bytestring(name)
-    @DBG_PRINT ("End element: $txt, current element: $(xph.pdata.name) ")
+#    @DBG_PRINT ("End element: $txt, current element: $(xph.pdata.name) ")
     
     parent = xph.pdata.parent
     xph.pdata.parent = nothing
@@ -240,7 +270,7 @@ function xp_parse(txt::String)
     
     try
         rc = XML_Parse(xph.parser, txt, length(txt), 1)
-        if (rc != XML_STATUS_OK) error("Error parsing document") end
+        if (rc != XML_STATUS_OK) error("Error parsing document : $rc") end
         return xph.pdata
     catch e
         stre = string(e)
@@ -274,7 +304,7 @@ function find(pd::ParsedData, path::String)
     nodes = split(pathext[1], "/")
     for n in nodes
         # Check to see if it is an index into an array has been requested, else default to 1
-        m =  match(r"(\w+)\s*(\[\s*(\d+)\s*\])?\s*(\{\s*(\w+)\s*\})?", n)
+        m =  match(r"([\:\w]+)\s*(\[\s*(\d+)\s*\])?\s*(\{\s*(\w+)\s*\})?", n)
         
         idx = nothing
         if ((m == nothing) || (length(m.captures) != 5))
@@ -293,8 +323,9 @@ function find(pd::ParsedData, path::String)
             end
         end
 
-        if haskey(pd.elements, node)
-            pd_arr = pd.elements[node]
+        elements_for_name = get_elements_by_name(pd.elements, node)
+        if elements_for_name != nothing
+            pd_arr = elements_for_name
 
             if (idx == nothing)
                 if (length(pd_arr) == 1)
