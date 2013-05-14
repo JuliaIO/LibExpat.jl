@@ -29,7 +29,7 @@ type ParsedData
     in_cdata
     
     ParsedData() = ParsedData("")
-    ParsedData(name) = new(name, Dict{String, Any}(), "", {}, "", nothing, false)
+    ParsedData(name) = new(name, Dict{String, Any}(), "", Dict{String, Any}(), "", nothing, false)
 end
 
 type XPHandle
@@ -158,15 +158,6 @@ function default_expand (p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
 end
 cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{Uint8}, Cint))
 
-function get_elements_by_name(el_list, name)
-    for e in el_list 
-        if (e[1].name == name) return e end
-    end
-    
-    return nothing
-
-end
-
 
 function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
     xph = unsafe_pointer_to_objref(p_xph)
@@ -178,10 +169,8 @@ function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Ui
     
     new_elem.name = name
 
-    elements_for_name = get_elements_by_name(xph.pdata.elements, name)
-    
-    if elements_for_name != nothing 
-        append!(elements_for_name, {new_elem})
+    if haskey(xph.pdata.elements, name)
+        push!(xph.pdata.elements[name], new_elem)
 #         print ("Added $name to $(xph.pdata.name)")
 #         par = xph.pdata.parent
 #         while par != nothing
@@ -194,7 +183,7 @@ function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Ui
         
     else
         # New entry
-        push!(xph.pdata.elements, {new_elem})
+        xph.pdata.elements[name] = {new_elem}
         @DBG_PRINT ("New child $name in $(xph.pdata.name)")
     end
 
@@ -323,9 +312,8 @@ function find(pd::ParsedData, path::String)
             end
         end
 
-        elements_for_name = get_elements_by_name(pd.elements, node)
-        if elements_for_name != nothing
-            pd_arr = elements_for_name
+        if haskey(pd.elements, node)
+            pd_arr = pd.elements[node]
 
             if (idx == nothing)
                 if (length(pd_arr) == 1)
