@@ -28,7 +28,10 @@ Examples for ```element_path``` are:
 If only one sub-element exists, the index is assumed to be 1 and may be omitted.
 - ```"foo/bar/baz[2]{qux}"``` is the same as ```"foo[1]/bar[1]/baz[2]{qux}"```
 
-You can navigate the returned ParsedData object directly. The relevant members of ParsedData are:
+
+
+You can also navigate the returned ParsedData object directly, i.e., without using ```find```. 
+The relevant members of ParsedData are:
 
 ```
 type ParsedData
