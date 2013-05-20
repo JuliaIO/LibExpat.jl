@@ -10,7 +10,7 @@ ret = find(pd, "ListBucketResult")
 @test isa(ret, Array)
 @test length(ret) == 1
 @test isa(ret[1], ParsedData)
-println("PASSED 1")
+println("PASSED 1.1")
 
 ret = find(pd, "ListBucketResult/Name")
 @test isa(ret, Array)

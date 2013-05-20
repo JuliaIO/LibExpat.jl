@@ -20,23 +20,27 @@ macro DBG_PRINT (s)
 end
 
 type ParsedData
-    name
-    attr
-    text
-    elements    
-    cdata
-    parent
-    in_cdata
+    name        # XML Tag 
+    attr        # Dict of tag attributes as name-value pairs 
+    text        # All text portions (concatenated) including newlines
+    elements    # Dict of child elements. 
+                # Key -> tag of element
+                # Value -> Array of ParsedData objects
+    
+    cdata       # all text within a CDATA section, concatenated, includes all whitespace
+    parent      # Only used while parsing, set to nothing due to 
+                # inability of show() to handle mutually referencing data structures
     
     ParsedData() = ParsedData("")
-    ParsedData(name) = new(name, Dict{String, Any}(), "", Dict{String, Any}(), "", nothing, false)
+    ParsedData(name) = new(name, Dict{String, Any}(), "", Dict{String, Any}(), "", nothing)
 end
 
 type XPHandle
   parser 
   pdata
+  in_cdata
   
-  XPHandle() = new(nothing, ParsedData(""))
+  XPHandle() = new(nothing, ParsedData(""), false)
 end
 
 
@@ -102,7 +106,7 @@ end
 function start_cdata (p_xph::Ptr{Void}) 
     xph = unsafe_pointer_to_objref(p_xph)
 #    @DBG_PRINT ("Found StartCdata")
-    xph.pdata.in_cdata = true
+    xph.in_cdata = true
     return
 end
 cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
@@ -110,7 +114,7 @@ cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
 function end_cdata (p_xph::Ptr{Void}) 
     xph = unsafe_pointer_to_objref(p_xph)
 #    @DBG_PRINT ("Found EndCdata")
-    xph.pdata.in_cdata = false
+    xph.in_cdata = false
     return;
 end
 cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
@@ -120,7 +124,7 @@ function cdata (p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)
   
     txt = bytestring(s, len)
-    if (xph.pdata.in_cdata == true)
+    if (xph.in_cdata == true)
         xph.pdata.cdata = xph.pdata.cdata * txt
     else
         xph.pdata.text = xph.pdata.text * txt
