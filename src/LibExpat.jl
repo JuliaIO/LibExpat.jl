@@ -1,5 +1,7 @@
 module LibExpat
 
+import Base: getindex
+
 include("lX_common_h.jl")
 include("lX_defines_h.jl")
 include("lX_expat_h.jl")
@@ -20,19 +22,43 @@ macro DBG_PRINT (s)
 end
 
 type ParsedData
-    name        # XML Tag 
-    attr        # Dict of tag attributes as name-value pairs 
-    text        # All text portions (concatenated) including newlines
-    elements    # Dict of child elements. 
-                # Key -> tag of element
-                # Value -> Array of ParsedData objects
-    
-    cdata       # all text within a CDATA section, concatenated, includes all whitespace
-    parent      # Only used while parsing, set to nothing due to 
-                # inability of show() to handle mutually referencing data structures
+    # XML Tag
+    name::String
+    # Dict of tag attributes as name-value pairs
+    attr::Dict{String,String}
+    # All text portions (concatenated) including newline
+    text::String
+    # Dict of child elements.
+        # Key -> tag of element
+        # Value -> Array of ParsedData objects
+    elements::Dict{String, Vector{ParsedData}}
+    # all text within a CDATA section, concatenated, includes all whitespace
+    cdata::String
+    # Only used while parsing, set to nothing due to
+    # inability of show() to handle mutually referencing data structures
+    parent::Union(ParsedData,Nothing)
     
     ParsedData() = ParsedData("")
-    ParsedData(name) = new(name, Dict{String, Any}(), "", Dict{String, Any}(), "", nothing)
+    ParsedData(name) = new(
+        name,
+        Dict{String, String}(),
+        "",
+        Dict{String, Vector{ParsedData}}(),
+        "",
+        nothing)
+end
+
+getindex(pd::ParsedData,x::String) = getindex(pd.elements,x)
+function getindex(pd::Vector{ParsedData},x::String)
+    children = ParsedData[]
+    for ele = pd
+        childs = get(ele.elements,x,nothing)
+        if childs !== nothing
+            append!(children,childs)
+        end
+    end
+    length(children) == 0 && error("key: $x not found")
+    return children
 end
 
 type XPHandle
@@ -42,7 +68,6 @@ type XPHandle
   
   XPHandle() = new(nothing, ParsedData(""), false)
 end
-
 
 
 function xp_make_parser(sep='\0') 
@@ -123,7 +148,7 @@ cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 function cdata (p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)
   
-    txt = bytestring(s, len)
+    txt = bytestring(s, int64(len))
     if (xph.in_cdata == true)
         xph.pdata.cdata = xph.pdata.cdata * txt
     else
@@ -187,7 +212,7 @@ function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Ui
         
     else
         # New entry
-        xph.pdata.elements[name] = {new_elem}
+        xph.pdata.elements[name] = ParsedData[new_elem]
         @DBG_PRINT ("New child $name in $(xph.pdata.name)")
     end
 
@@ -269,7 +294,7 @@ function xp_parse(txt::String)
         stre = string(e)
         (err, line, column, pos) = xp_geterror(xph)
         @DBG_PRINT ("$e, $err, $line, $column, $pos")
-        error("$e, $err, $line, $column, $pos")
+        rethrow("$e, $err, $line, $column, $pos")
     
     finally
         if (xph != nothing) xp_close(xph) end
@@ -364,4 +389,4 @@ function find(pd::ParsedData, path::String)
 end 
 
 
-end 
+end
