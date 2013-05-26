@@ -148,7 +148,7 @@ cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 function cdata (p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)
   
-    txt = bytestring(s, int64(len))
+    txt = bytestring(s, int(len))
     if (xph.in_cdata == true)
         xph.pdata.cdata = xph.pdata.cdata * txt
     else
