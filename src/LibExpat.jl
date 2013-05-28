@@ -66,7 +66,7 @@ type XPHandle
   pdata
   in_cdata
   
-  XPHandle() = new(nothing, ParsedData(""), false)
+  XPHandle() = new(nothing, nothing, false)
 end
 
 
@@ -198,18 +198,11 @@ function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Ui
     
     new_elem.name = name
 
-    if haskey(xph.pdata.elements, name)
+    if (xph.pdata == nothing)
+        nothing
+    elseif haskey(xph.pdata.elements, name)
         push!(xph.pdata.elements[name], new_elem)
-#         print ("Added $name to $(xph.pdata.name)")
-#         par = xph.pdata.parent
-#         while par != nothing
-#             print (".$(par.name)")
-#             par = par.parent
-#         end
-#         println ("")
-        
         @DBG_PRINT ("Added $name to $(xph.pdata.name)")
-        
     else
         # New entry
         xph.pdata.elements[name] = ParsedData[new_elem]
@@ -250,8 +243,12 @@ function end_element (p_xph::Ptr{Void}, name::Ptr{Uint8})
 #    @DBG_PRINT ("End element: $txt, current element: $(xph.pdata.name) ")
     
     parent = xph.pdata.parent
-    xph.pdata.parent = nothing
-    xph.pdata = parent
+    
+    # Don't delete pdata from the root element
+    if (parent != nothing)
+        xph.pdata.parent = nothing
+        xph.pdata = parent
+    end
     
     return;
 end
@@ -319,6 +316,16 @@ function find(pd::ParsedData, path::String)
         end
     end
 
+    if path[1] == '/'
+        # This will treat the incoming pd as the root of the tree
+        new_root = ParsedData()
+        new_root.elements[pd.name] = ParsedData[pd]
+        pd = new_root
+        pathext[1] = pathext[1][2:end]
+        
+    #else - it will start searching the children....
+    end
+    
     nodes = split(pathext[1], "/")
     for n in nodes
         # Check to see if it is an index into an array has been requested, else default to 1

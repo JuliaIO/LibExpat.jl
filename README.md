@@ -28,6 +28,11 @@ Examples for ```element_path``` are:
 If only one sub-element exists, the index is assumed to be 1 and may be omitted.
 - ```"foo/bar/baz[2]{qux}"``` is the same as ```"foo[1]/bar[1]/baz[2]{qux}"```
 
+- returns ```nothing``` if an element in the path is not found
+
+- NOTE: If the ```element_path``` starts with a ```/``` then the search starts from pd as the root pd (the first argument)
+
+- If ```element_path``` does NOT start with a ```/``` then the search starts with the children of the root pd (the first argument)
 
 
 You can also navigate the returned ParsedData object directly, i.e., without using ```find```. 
