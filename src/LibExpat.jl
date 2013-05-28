@@ -66,7 +66,7 @@ type XPHandle
   pdata
   in_cdata
   
-  XPHandle() = new(nothing, nothing, false)
+  XPHandle() = new(nothing, ParsedData(""), false)
 end
 
 
@@ -286,7 +286,9 @@ function xp_parse(txt::String)
     try
         rc = XML_Parse(xph.parser, txt, length(txt), 1)
         if (rc != XML_STATUS_OK) error("Error parsing document : $rc") end
-        return xph.pdata
+        
+        # The root element will only have a single child element in a well formed XML
+        return collect(xph.pdata.elements)[1][2][1]
     catch e
         stre = string(e)
         (err, line, column, pos) = xp_geterror(xph)
