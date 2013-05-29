@@ -62,20 +62,19 @@ function getindex(pd::Vector{ParsedData},x::String)
 end
 
 type XPHandle
-  parser 
-  pdata
-  in_cdata
+  parser::Union(XML_Parser,Nothing)
+  pdata::ParsedData
+  in_cdata::Bool
   
-  XPHandle() = new(nothing, ParsedData(""), false)
+  XPHandle(p) = new(p, ParsedData(""), false)
 end
 
 
 function xp_make_parser(sep='\0') 
-    xph = XPHandle()
     p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
-    xph.parser = p
-
     if (p == C_NULL) error("XML_ParserCreate failed") end
+
+    xph = XPHandle(p)
 
     p_xph = pointer_from_objref(xph)
   
@@ -397,5 +396,6 @@ function find(pd::ParsedData, path::String)
     return nothing
 end 
 
+include("xpath.jl")
 
 end
