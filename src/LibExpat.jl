@@ -350,8 +350,12 @@ function find{T<:String}(pd::ParsedData, path::T)
     
     pd = xpath(pd, XPath{T}(xp))
     if what == :node
-        if idx 
-            return pd[1]
+        if idx
+            if length(pd) == 1
+                return pd[1]
+            else
+                return nothing
+            end
         else
             # If caller did not specify an index, return a list of leaf nodes.
             return pd

@@ -165,7 +165,7 @@ end
 
 function xpath{T<:String}(pd::ParsedData, xp::XPath{T}, position::Int)
     #return value is whether the node is counted for next position filter in sequence
-    #implements axes: child, descendant, parent, ancestor, self, descendant-or-self, ancestor-or-self
+    #implements axes: child, descendant, parent, ancestor, self, root, descendant-or-self, ancestor-or-self
     #implements filters: position, name, attribute, attribute=, 
     if xp.index == length(xp.filter)
         if !contains(xp.output,pd)
