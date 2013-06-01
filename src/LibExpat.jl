@@ -1,6 +1,6 @@
 module LibExpat
 
-import Base: getindex
+import Base: getindex, show
 
 include("lX_common_h.jl")
 include("lX_defines_h.jl")
@@ -26,59 +26,68 @@ type ParsedData
     name::String
     # Dict of tag attributes as name-value pairs
     attr::Dict{String,String}
-    # All text portions (concatenated) including newline
-    text::String
-    # Dict of child elements.
-        # Key -> tag of element
-        # Value -> Array of ParsedData objects
-    elements::Dict{String, Vector{ParsedData}}
-    # all text within a CDATA section, concatenated, includes all whitespace
-    cdata::String
-    # Only used while parsing, set to nothing due to
-    # inability of show() to handle mutually referencing data structures
-    parent::Union(ParsedData,Nothing)
+    # List of child elements.
+    elements::Vector{Union(ParsedData,String)}
+    parent::ParsedData
     
     ParsedData() = ParsedData("")
-    ParsedData(name) = new(
-        name,
-        Dict{String, String}(),
-        "",
-        Dict{String, Vector{ParsedData}}(),
-        "",
-        nothing)
+    function ParsedData(name)
+        pd=new(
+            name,
+            Dict{String, String}(),
+            Union(ParsedData,String)[])
+        pd.parent=pd
+        pd
+    end
 end
 
-getindex(pd::ParsedData,x::String) = getindex(pd.elements,x)
-function getindex(pd::Vector{ParsedData},x::String)
-    children = ParsedData[]
-    for ele = pd
-        childs = get(ele.elements,x,nothing)
-        if childs !== nothing
-            append!(children,childs)
+function show(io::IO, pd::ParsedData)
+    print(io,'<',pd.name)
+    for (name,value) in pd.attr
+        print(io,' ',name,'=','"',replace(value,'"',"&quot;"),'"')
+    end
+    if length(pd.elements) == 0
+        print(io,'/','>')
+    else
+        print(io,'>')
+        for ele in pd.elements
+            if isa(ele, ParsedData)
+                show(io, ele)
+            else
+                print(io, replace(ele,'<',"&lt;"))
+            end
+        end
+        print(io,'<','/',pd.name,'>')
+    end
+end
+function string_value(pd::ParsedData)
+    str = ""
+    for node in pd.elements
+        if isa(node, String)
+            str *= node
+        elseif isa(node,ParsedData)
+            str *= string_value(node)
         end
     end
-    length(children) == 0 && error("key: $x not found")
-    return children
+    str
 end
 
+
 type XPHandle
-  parser 
-  pdata
-  in_cdata
+  parser::Union(XML_Parser,Nothing)
+  pdata::ParsedData
+  in_cdata::Bool
   
-  XPHandle() = new(nothing, ParsedData(""), false)
+  XPHandle(p) = new(p, ParsedData(""), false)
 end
 
 
 function xp_make_parser(sep='\0') 
-    xph = XPHandle()
     p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
-    xph.parser = p
-
     if (p == C_NULL) error("XML_ParserCreate failed") end
 
+    xph = XPHandle(p)
     p_xph = pointer_from_objref(xph)
-  
     XML_SetUserData(p, p_xph);
     
     XML_SetCdataSectionHandler(p, cb_start_cdata, cb_end_cdata)
@@ -95,10 +104,8 @@ function xp_make_parser(sep='\0')
 #    XML_SetUnparsedEntityDeclHandler(p, f_UnparsedEntityDecl)
 #    XML_SetStartDoctypeDeclHandler(p, f_StartDoctypeDecl) 
 
-    return xph;
-
+    return xph
 end
-
 
 
 function xp_geterror(xph::XPHandle)
@@ -121,7 +128,6 @@ function xp_geterror(xph::XPHandle)
 end
 
 
-
 function xp_close (xph::XPHandle) 
   if (xph.parser != nothing)    XML_ParserFree(xph.parser) end
   xph.parser = nothing
@@ -129,7 +135,7 @@ end
 
 
 function start_cdata (p_xph::Ptr{Void}) 
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
 #    @DBG_PRINT ("Found StartCdata")
     xph.in_cdata = true
     return
@@ -137,7 +143,7 @@ end
 cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
 
 function end_cdata (p_xph::Ptr{Void}) 
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
 #    @DBG_PRINT ("Found EndCdata")
     xph.in_cdata = false
     return;
@@ -146,14 +152,10 @@ cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 
 
 function cdata (p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
   
     txt = bytestring(s, int(len))
-    if (xph.in_cdata == true)
-        xph.pdata.cdata = xph.pdata.cdata * txt
-    else
-        xph.pdata.text = xph.pdata.text * txt
-    end
+    push!(xph.pdata.elements, txt)
     
 #    @DBG_PRINT ("Found CData : " * txt)
     return;
@@ -162,7 +164,7 @@ cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{Uint8}, Cint))
 
 
 function comment (p_xph::Ptr{Void}, data::Ptr{Uint8}) 
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
     @DBG_PRINT ("Found comment : " * txt)
     return;
@@ -171,7 +173,7 @@ cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{Uint8}))
 
 
 function default (p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
 #    @DBG_PRINT ("Default : " * txt)
     return;
@@ -180,7 +182,7 @@ cb_default = cfunction(default, Void, (Ptr{Void},Ptr{Uint8}, Cint))
 
 
 function default_expand (p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
 #    @DBG_PRINT ("Default Expand : " * txt)
     return;
@@ -189,25 +191,15 @@ cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{Uint8}, Cint)
 
 
 function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     name = bytestring(name)
 #    @DBG_PRINT ("Start Elem name : $name,  current element: $(xph.pdata.name) ")
     
-    new_elem = ParsedData()
+    new_elem = ParsedData(name)
     new_elem.parent = xph.pdata 
-    
-    new_elem.name = name
 
-    if (xph.pdata == nothing)
-        nothing
-    elseif haskey(xph.pdata.elements, name)
-        push!(xph.pdata.elements[name], new_elem)
-        @DBG_PRINT ("Added $name to $(xph.pdata.name)")
-    else
-        # New entry
-        xph.pdata.elements[name] = ParsedData[new_elem]
-        @DBG_PRINT ("New child $name in $(xph.pdata.name)")
-    end
+    push!(xph.pdata.elements, new_elem)
+    @DBG_PRINT ("Added $name to $(xph.name)")
 
     xph.pdata = new_elem
     
@@ -238,17 +230,11 @@ cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Ptr
 
 
 function end_element (p_xph::Ptr{Void}, name::Ptr{Uint8})
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(name)
 #    @DBG_PRINT ("End element: $txt, current element: $(xph.pdata.name) ")
     
-    parent = xph.pdata.parent
-    
-    # Don't delete pdata from the root element
-    if (parent != nothing)
-        xph.pdata.parent = nothing
-        xph.pdata = parent
-    end
+    xph.pdata = xph.pdata.parent
     
     return;
 end
@@ -256,7 +242,7 @@ cb_end_element = cfunction(end_element, Void, (Ptr{Void},Ptr{Uint8}))
 
 
 function start_namespace (p_xph::Ptr{Void}, prefix::Ptr{Uint8}, uri::Ptr{Uint8}) 
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = bytestring(prefix)
     uri = bytestring(uri)
     @DBG_PRINT ("start namespace prefix : $prefix, uri: $uri")
@@ -266,7 +252,7 @@ cb_start_namespace = cfunction(start_namespace, Void, (Ptr{Void},Ptr{Uint8}, Ptr
 
 
 function end_namespace (p_xph::Ptr{Void}, prefix::Ptr{Uint8})
-    xph = unsafe_pointer_to_objref(p_xph)
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = bytestring(prefix)
     @DBG_PRINT ("end namespace prefix : $prefix")
     return;
@@ -288,7 +274,7 @@ function xp_parse(txt::String)
         if (rc != XML_STATUS_OK) error("Error parsing document : $rc") end
         
         # The root element will only have a single child element in a well formed XML
-        return collect(xph.pdata.elements)[1][2][1]
+        return xph.pdata.elements[1]
     catch e
         stre = string(e)
         (err, line, column, pos) = xp_geterror(xph)
@@ -301,7 +287,7 @@ function xp_parse(txt::String)
 end
 
 
-function find(pd::ParsedData, path::String)
+function find{T<:String}(pd::ParsedData, path::T)
     # What are we looking for?
     what = :node
     attr = ""
@@ -309,93 +295,93 @@ function find(pd::ParsedData, path::String)
     pathext = split(path, "#")
     if (length(pathext)) > 2 error("Invalid path syntax") 
     elseif (length(pathext) == 2)
-        if (pathext[2] == "text")
-            what = :text
-        elseif (pathext[2] == "cdata")
-            what = :cdata
+        if (pathext[2] == "string")
+            what = :string
         else
             error("Unknown extension : [$(pathext[2])]")
         end
     end
 
+    xp= Array((Symbol,Any),0)
     if path[1] == '/'
         # This will treat the incoming pd as the root of the tree
-        new_root = ParsedData()
-        new_root.elements[pd.name] = ParsedData[pd]
-        pd = new_root
+        push!(xp, (:root,nothing))
         pathext[1] = pathext[1][2:end]
-        
-    #else - it will start searching the children....
+        #else - it will start searching the children....
     end
-    
+
     nodes = split(pathext[1], "/")
+    idx = false
+    descendant = :child
     for n in nodes
+        idx = false
+        if length(n) == 0
+            if descendant == :descendant
+                error("too many / in a row")
+            end
+            descendant = :descendant
+            continue
+        end
         # Check to see if it is an index into an array has been requested, else default to 1
         m =  match(r"([\:\w]+)\s*(\[\s*(\d+)\s*\])?\s*(\{\s*(\w+)\s*\})?", n)
-        
-        idx = nothing
+
         if ((m == nothing) || (length(m.captures) != 5))
             error("Invalid name $n")
         else
             node = m.captures[1]
-            
-            if m.captures[3] != nothing
-                idx = int(m.captures[3])
-            end
-            
+            push!(xp, (descendant,nothing))
+            descendant = :child
+            push!(xp, (:name,SubString{T}(convert(T,node),1,length(node))))
+ 
             if m.captures[5] != nothing
-                if (n != nodes[end]) error("Attribute request must only be present on the final node") end
-                what = :attr
+                if (n == nodes[end])
+                    what = :attr
+                end
                 attr = m.captures[5]
-            end
-        end
-
-        if haskey(pd.elements, node)
-            pd_arr = pd.elements[node]
-
-            if (idx == nothing)
-                if (length(pd_arr) == 1)
-                    pd = pd_arr[1]
-                else
-                    if (n != nodes[end]) || (what != :node)
-                        error("More than one instance of $node, please specify an index")
-                        
-                    # NOTE : The 'else' of this is handled cleanly below
-                    end
-                end
-            else
-                pd = pd_arr[idx]
+                push!(xp, (:attribute,SubString{T}(convert(T,attr),1,length(attr))))
             end
 
-            if (n == nodes[end])
-                if what == :node
-                    if (idx == nothing) 
-                        # If caller did not specify an index, return a list of leaf nodes.
-                        return pd_arr
-                    else
-                        return pd
-                    end
-                
-                elseif what == :text
-                    return pd.text
-                
-                elseif what == :cdata
-                    return pd.cdata
-                
-                elseif what == :attr
-                    return pd.attr[attr]
-                    
-                else
-                    error("Unknown request type")
-                end
+            if m.captures[3] != nothing
+                push!(xp, (:position,(:(=),int(m.captures[3]))))
+                idx = true
             end
-        else
-            return nothing
         end
     end
     
+    pd = xpath(pd, XPath{T}(xp))
+    if what == :node
+        if idx
+            if length(pd) == 1
+                return pd[1]
+            else
+                return nothing
+            end
+        else
+            # If caller did not specify an index, return a list of leaf nodes.
+            return pd
+        end
+    elseif length(pd) == 0
+        return nothing
+
+    elseif length(pd) != 1
+        error("More than one instance of $pd, please specify an index")
+
+    else
+        pd = pd[1]
+        if what == :string
+            return string_value(pd)
+
+        elseif what == :attr
+            return pd.attr[attr]
+
+        else
+            error("Unknown request type")
+        end
+    end
+
     return nothing
 end 
 
+include("xpath.jl")
 
 end
