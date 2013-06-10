@@ -70,5 +70,14 @@ println("PASSED 12.1")
 @test (find(pd, "/ListBucketResult/Contents[2]/Owner/JUNK#string") == nothing)
 println("PASSED 12.2")
 
+pd = xp_parse(open(readall, "utf8.xml"))
+@test isa(pd, ParsedData)
+println("PASSED 13")
 
+
+pd = xp_parse(open(readall, "wiki.xml"))
+@test isa(pd, ParsedData)
+ret = find(pd, "/page/revision/id#string")
+@test ret == "557462847"
+println("PASSED 14")
 

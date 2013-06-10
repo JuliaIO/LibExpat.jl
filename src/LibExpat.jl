@@ -136,7 +136,7 @@ end
 
 function start_cdata (p_xph::Ptr{Void}) 
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-#    @DBG_PRINT ("Found StartCdata")
+    @DBG_PRINT ("Found StartCdata")
     xph.in_cdata = true
     return
 end
@@ -144,7 +144,7 @@ cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
 
 function end_cdata (p_xph::Ptr{Void}) 
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-#    @DBG_PRINT ("Found EndCdata")
+    @DBG_PRINT ("Found EndCdata")
     xph.in_cdata = false
     return;
 end
@@ -157,7 +157,7 @@ function cdata (p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
     txt = bytestring(s, int(len))
     push!(xph.pdata.elements, txt)
     
-#    @DBG_PRINT ("Found CData : " * txt)
+    @DBG_PRINT ("Found CData : " * txt)
     return;
 end
 cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{Uint8}, Cint))
@@ -175,7 +175,7 @@ cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{Uint8}))
 function default (p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
-#    @DBG_PRINT ("Default : " * txt)
+    @DBG_PRINT ("Default : " * txt)
     return;
 end
 cb_default = cfunction(default, Void, (Ptr{Void},Ptr{Uint8}, Cint))
@@ -184,7 +184,7 @@ cb_default = cfunction(default, Void, (Ptr{Void},Ptr{Uint8}, Cint))
 function default_expand (p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
-#    @DBG_PRINT ("Default Expand : " * txt)
+    @DBG_PRINT ("Default Expand : " * txt)
     return;
 end
 cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{Uint8}, Cint))
@@ -193,13 +193,13 @@ cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{Uint8}, Cint)
 function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     name = bytestring(name)
-#    @DBG_PRINT ("Start Elem name : $name,  current element: $(xph.pdata.name) ")
+    @DBG_PRINT ("Start Elem name : $name,  current element: $(xph.pdata.name) ")
     
     new_elem = ParsedData(name)
     new_elem.parent = xph.pdata 
 
     push!(xph.pdata.elements, new_elem)
-    @DBG_PRINT ("Added $name to $(xph.name)")
+    @DBG_PRINT ("Found  $name")
 
     xph.pdata = new_elem
     
@@ -232,7 +232,7 @@ cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Ptr
 function end_element (p_xph::Ptr{Void}, name::Ptr{Uint8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(name)
-#    @DBG_PRINT ("End element: $txt, current element: $(xph.pdata.name) ")
+    @DBG_PRINT ("End element: $txt, current element: $(xph.pdata.name) ")
     
     xph.pdata = xph.pdata.parent
     
@@ -270,7 +270,7 @@ function xp_parse(txt::String)
     xph = xp_make_parser()
     
     try
-        rc = XML_Parse(xph.parser, txt, length(txt), 1)
+        rc = XML_Parse(xph.parser, txt, length(convert(Vector{Uint8},txt)), 1)
         if (rc != XML_STATUS_OK) error("Error parsing document : $rc") end
         
         # The root element will only have a single child element in a well formed XML
