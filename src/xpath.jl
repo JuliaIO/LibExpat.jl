@@ -20,13 +20,22 @@ const xpath_types = (String=>Symbol)[
     "node" => :node]
 
 const xpath_functions = (String=>(Symbol,Int,Int))[ # (name, min args, max args)
+    #node-set
     "last" => (:last,0,0),
     "position" => (:position,0,0),
     "count" => (:count,0,1),
+
+    #boolean
     "not" => (:not,1,1),
     "true" => (:true_,0,0),
     "false" => (:false_,0,0),
     "boolean" => (:bool,1,1),
+
+    #string
+    "string" => (:string_fn,0,1),
+    "contains" => (:contains,2,2),
+
+    #number
     #TODO: more functions
     ]
 
@@ -527,7 +536,7 @@ xpath_number(a::Bool) = a?1:0
 xpath_number(a::Int) = a
 xpath_number(a::Float64) = a
 xpath_number(a::String) = try parseint(a) catch ex NaN end
-xpath_number(a::ParsedData) = xpath_number(stringvalue(a))
+xpath_number(a::ParsedData) = xpath_number(string_value(a))
 
 xpath_string(a::Bool) = string(a)
 xpath_string(a::Int) = string(a)
@@ -543,7 +552,8 @@ function xpath_string(a::Float64)
     end
 end
 xpath_string(a::String) = a
-xpath_string(a::Vector{ParsedData}) = stringvalue(a)
+xpath_string(a::ParsedData) = string_value(a)
+xpath_string(a::Vector{ParsedData}) = length(a) == 0 ? "" : string_value(a[1])
 
 function xpath_expr{T<:String}(pd::ParsedData, xp::XPath{T}, filter::(Symbol,Any), position::Int, last::Int, output_hint::Type)
     op = filter[1]::Symbol
@@ -621,6 +631,8 @@ function xpath_expr{T<:String}(pd::ParsedData, xp::XPath{T}, filter::(Symbol,Any
                             a = xpath_number(a)
                         elseif isa(b, Bool)
                             a = xpath_boolean(a)
+                        elseif isa(b, String)
+                            a = xpath_string(a)
                         else
                             assert(false)
                         end
@@ -629,6 +641,8 @@ function xpath_expr{T<:String}(pd::ParsedData, xp::XPath{T}, filter::(Symbol,Any
                             b = xpath_number(b)
                         elseif isa(a, Bool)
                             b = xpath_boolean(b)
+                        elseif isa(a, String)
+                            b = xpath_string(b)
                         else
                             assert(false)
                         end
@@ -700,6 +714,17 @@ function xpath_expr{T<:String}(pd::ParsedData, xp::XPath{T}, filter::(Symbol,Any
         else
             assert(false)
         end
+    elseif op == :string_fn
+        if length(args) == 0
+            a = xpath_string(pd)::String
+        else
+            a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
+        end
+        return a
+    elseif op == :contains
+        a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
+        b = xpath_string(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any))::String
+        return !(isempty(search(a, b)))::Bool
     else
         error("invalid or unimplmented op $op")
     end
@@ -797,15 +822,15 @@ function xpath{T<:String}(pd::ParsedData, xp::XPath{T}, filter::Vector{(Symbol,A
         elseif axis == :ancestor
             parent = pd
             while !isroot(parent)
-                parent = pd.parent
+                parent = parent.parent
                 iscounted |= xpath(parent, xp, filter, index, position, position_index, collector, output)
             end
         elseif axis == :ancestor_or_self
             parent = pd
             iscounted = xpath(parent, xp, filter, index, position, position_index, collector, output)
             while !isroot(parent)
-                parent = pd.parent
-                iscounted = xpath(parent, xp, filter, index, position, position_index, collector, output)
+                parent = parent.parent
+                iscounted |= xpath(parent, xp, filter, index, position, position_index, collector, output)
             end
         elseif axis == :self
             iscounted = xpath(pd, xp, filter, index, position, position_index, collector, output)
