@@ -331,18 +331,18 @@ function find{T<:String}(pd::ParsedData, path::T)
             node = m.captures[1]
             push!(xp, (descendant,nothing))
             descendant = :child
-            push!(xp, (:name,SubString{T}(convert(T,node),1,length(node))))
+            push!(xp, (:name, convert(T,node)))
  
             if m.captures[5] != nothing
                 if (n == nodes[end])
                     what = :attr
                 end
                 attr = m.captures[5]
-                push!(xp, (:attribute,SubString{T}(convert(T,attr),1,length(attr))))
+                push!(xp, (:filter, (:attribute, convert(T,attr))))
             end
 
             if m.captures[3] != nothing
-                push!(xp, (:position,(:(=),int(m.captures[3]))))
+                push!(xp, (:filter, (:number,int(m.captures[3]))))
                 idx = true
             end
         end
