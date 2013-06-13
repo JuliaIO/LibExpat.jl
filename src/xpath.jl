@@ -34,6 +34,7 @@ const xpath_functions = (String=>(Symbol,Int,Int))[ # (name, min args, max args)
     #string
     "string" => (:string_fn,0,1),
     "contains" => (:contains,2,2),
+    "starts-with" => (:startswith,2,2),
 
     #number
     #TODO: more functions
@@ -725,6 +726,10 @@ function xpath_expr{T<:String}(pd::ParsedData, xp::XPath{T}, filter::(Symbol,Any
         a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
         b = xpath_string(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any))::String
         return !(isempty(search(a, b)))::Bool
+    elseif op == :startswith
+        a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
+        b = xpath_string(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any))::String
+        return beginswith(a,b)::Bool
     else
         error("invalid or unimplmented op $op")
     end
@@ -764,6 +769,8 @@ function xpath{T<:String}(pd::ParsedData, xp::XPath{T}, filter::Vector{(Symbol,A
         bool = xpath_expr(pd, xp, name, p, -1, Bool)
         if isa(bool, Int)
             iscounted = bool::Int == p
+        elseif isa(bool, Float64)
+            iscounted = bool::Float64 == p
         elseif isa(bool, Vector{ParsedData})
             iscounted = length(bool::Vector{ParsedData}) != 0
         else
@@ -807,6 +814,10 @@ function xpath{T<:String}(pd::ParsedData, xp::XPath{T}, filter::Vector{(Symbol,A
         else
             iscounted = false
         end
+
+    elseif axis == :(|)
+        iscounted  = xpath(pd, xp, name[1]::Vector{(Symbol,Any)}, 1, position, position_index, collector, output)
+        iscounted |= xpath(pd, xp, name[2]::Vector{(Symbol,Any)}, 1, position, position_index, collector, output)
 
     # AXES
     else
@@ -854,7 +865,7 @@ function xpath{T<:String}(pd::ParsedData, xp::XPath{T}, filter::Vector{(Symbol,A
         #elseif axis == :preceding-sibling
 
         #TODO: axis in xpath_types
-    
+            
         # ERROR - NO MATCH
         else
             error("encountered unsupported axis $axis")
