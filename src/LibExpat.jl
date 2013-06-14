@@ -60,13 +60,14 @@ function show(io::IO, pd::ParsedData)
         print(io,'<','/',pd.name,'>')
     end
 end
-function string_value(pd::ParsedData)
-    str = ""
+
+string_value(pd::ParsedData) = takebuf_string(string_value(pd,IOString()))
+function string_value(pd::ParsedData, str::IOString)
     for node in pd.elements
         if isa(node, String)
-            str *= node
+            write(str, node::String)
         elseif isa(node,ParsedData)
-            str *= string_value(node)
+            string_value(node::ParsedData, str)
         end
     end
     str
