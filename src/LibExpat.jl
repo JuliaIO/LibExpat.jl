@@ -9,7 +9,8 @@ include("lX_expat_h.jl")
 
 @c Ptr{XML_LChar} XML_ErrorString (Cint,) libexpat
 
-export ParsedData, xp_parse, find, xpath, @xpath_str
+export ETree, xp_parse, find, xpath, @xpath_str
+export ParsedData # deprecated
 
 DEBUG = false
 
@@ -21,27 +22,28 @@ macro DBG_PRINT (s)
     end
 end
 
-type ParsedData
+type ETree
     # XML Tag
     name::String
     # Dict of tag attributes as name-value pairs
     attr::Dict{String,String}
     # List of child elements.
-    elements::Vector{Union(ParsedData,String)}
-    parent::ParsedData
+    elements::Vector{Union(ETree,String)}
+    parent::ETree
     
-    ParsedData() = ParsedData("")
-    function ParsedData(name)
+    ETree() = ETree("")
+    function ETree(name)
         pd=new(
             name,
             Dict{String, String}(),
-            Union(ParsedData,String)[])
+            Union(ETree,String)[])
         pd.parent=pd
         pd
     end
 end
+typealias ParsedData ETree
 
-function show(io::IO, pd::ParsedData)
+function show(io::IO, pd::ETree)
     print(io,'<',pd.name)
     for (name,value) in pd.attr
         print(io,' ',name,'=','"',replace(value,'"',"&quot;"),'"')
@@ -51,7 +53,7 @@ function show(io::IO, pd::ParsedData)
     else
         print(io,'>')
         for ele in pd.elements
-            if isa(ele, ParsedData)
+            if isa(ele, ETree)
                 show(io, ele)
             else
                 print(io, replace(ele,'<',"&lt;"))
@@ -61,13 +63,13 @@ function show(io::IO, pd::ParsedData)
     end
 end
 
-string_value(pd::ParsedData) = takebuf_string(string_value(pd,IOString()))
-function string_value(pd::ParsedData, str::IOString)
+string_value(pd::ETree) = takebuf_string(string_value(pd,IOString()))
+function string_value(pd::ETree, str::IOString)
     for node in pd.elements
         if isa(node, String)
             write(str, node::String)
-        elseif isa(node,ParsedData)
-            string_value(node::ParsedData, str)
+        elseif isa(node,ETree)
+            string_value(node::ETree, str)
         end
     end
     str
@@ -76,10 +78,10 @@ end
 
 type XPHandle
   parser::Union(XML_Parser,Nothing)
-  pdata::ParsedData
+  pdata::ETree
   in_cdata::Bool
   
-  XPHandle(p) = new(p, ParsedData(""), false)
+  XPHandle(p) = new(p, ETree(""), false)
 end
 
 
@@ -196,7 +198,7 @@ function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Ui
     name = bytestring(name)
     @DBG_PRINT ("Start Elem name : $name,  current element: $(xph.pdata.name) ")
     
-    new_elem = ParsedData(name)
+    new_elem = ETree(name)
     new_elem.parent = xph.pdata 
 
     push!(xph.pdata.elements, new_elem)
@@ -288,7 +290,7 @@ function xp_parse(txt::String)
 end
 
 
-function find{T<:String}(pd::ParsedData, path::T)
+function find{T<:String}(pd::ETree, path::T)
     # What are we looking for?
     what = :node
     attr = ""
@@ -349,7 +351,7 @@ function find{T<:String}(pd::ParsedData, path::T)
         end
     end
 
-    pd = xpath(pd, XPath{T,Vector{ParsedData}}((:xpath, xp)))
+    pd = xpath(pd, XPath{T,Vector{ETree}}((:xpath, xp)))
     if what == :node
         if idx
             if length(pd) == 1
