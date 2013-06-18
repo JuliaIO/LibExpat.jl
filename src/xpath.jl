@@ -135,7 +135,7 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
         @xpath_parse :root :node
         k = k2
     end
-    returntype::DataType = ParsedData
+    returntype::DataType = ETree
     first::Bool = true
     while !done(xpath,k)
         # i..j has text, k is current character
@@ -254,7 +254,7 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
                 error("xml names may not begin with a . (at $k)")
             elseif length(name) == 2 && name[2] == '.'
                 @xpath_parse :parent :element
-                returntype = ParsedData
+                returntype = ETree
             elseif length(name) == 1
                 @xpath_parse :self :node
             else
@@ -276,7 +276,7 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
             if name != "*"
                 @xpath_parse :name name
             end
-            returntype = ParsedData
+            returntype = ETree
         end #if
         while !done(xpath,k)
             c, k2 = next(xpath,k)
@@ -286,7 +286,7 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
             elseif c == '/'
                 if done(xpath,k)
                     error("xpath should not end with a /")
-                #elseif returntype !== ParsedData # this is a valid XPath
+                #elseif returntype !== ETree # this is a valid XPath
                 #    error("xpath has an unexpected / at $k -- previous selector does not return a Node")
                 end
                 k = k2
@@ -403,7 +403,7 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
             k, fn_, returntype = xpath_parse(xpath, i, ismacro)
             if typeseq(returntype, Any)
                 fn_ = @xpath_fn :xpath_any fn_
-            elseif typeseq(returntype, ParsedData)
+            elseif typeseq(returntype, ETree)
                 fn_ = @xpath_fn :xpath fn_
             elseif typeseq(returntype, String)
                 if !ismacro && length(fn_) == 1 && fn_[1][1]::Symbol == :attribute
@@ -605,10 +605,10 @@ end
 
 
 
-isroot(pd::ParsedData) = (pd.parent == pd)
+isroot(pd::ETree) = (pd.parent == pd)
 
 immutable XPath{T<:String,
-                returntype <: Union(Vector{ParsedData},
+                returntype <: Union(Vector{ETree},
                       Vector{String},
                       Vector{Any},
                       Bool,
@@ -626,11 +626,11 @@ immutable XPath{T<:String,
 end
 
 type XPath_Collector
-    nodes::Vector{ParsedData}
+    nodes::Vector{ETree}
     filter::Any
     index::Int
     function XPath_Collector()
-        new(ParsedData[], nothing, 0)
+        new(ETree[], nothing, 0)
     end
 end
 
@@ -660,14 +660,14 @@ xpath_boolean(a::Int) = a != 0
 xpath_boolean(a::Float64) = a != 0 && !isnan(a)
 xpath_boolean(a::String) = !isempty(a)
 xpath_boolean(a::Vector) = !isempty(a)
-xpath_boolean(a::ParsedData) = true
+xpath_boolean(a::ETree) = true
 
 xpath_number(a::Bool) = a?1:0
 xpath_number(a::Int) = a
 xpath_number(a::Float64) = a
 xpath_number(a::String) = try parsefloat(a) catch ex NaN end
 xpath_number(a::Vector) = xpath_number(xpath_string(a))
-xpath_number(a::ParsedData) = xpath_number(xpath_string(a))
+xpath_number(a::ETree) = xpath_number(xpath_string(a))
 
 xpath_string(a::Bool) = string(a)
 xpath_string(a::Int) = string(a)
@@ -684,7 +684,7 @@ function xpath_string(a::Float64)
 end
 xpath_string(a::String) = a
 xpath_string(a::Vector) = length(a) == 0 ? "" : xpath_string(a[1])
-xpath_string(a::ParsedData) = string_value(a)
+xpath_string(a::ETree) = string_value(a)
 
 function xpath_normalize(s::String)
     normal = IOString()
@@ -728,7 +728,7 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
     op = filter[1]::Symbol
     args = filter[2]
     if op == :attribute
-        if !isa(pd, ParsedData)
+        if !isa(pd, ETree)
             return String[]
         elseif isa(args, Nothing)
             return pd.attr
@@ -795,8 +795,8 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
             end
             for a = a
                 for b = b
-                    if isa(a, ParsedData)
-                        if isa(b, ParsedData)
+                    if isa(a, ETree)
+                        if isa(b, ETree)
                             #nothing
                         elseif isa(b, Int) || isa(b, Float64)
                             a = xpath_number(a)
@@ -807,7 +807,7 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
                         else
                             assert(false)
                         end
-                    elseif isa(b, ParsedData)
+                    elseif isa(b, ETree)
                         if isa(a, Int) || isa(a, Float64)
                             b = xpath_number(b)
                         elseif isa(a, Bool)
@@ -868,8 +868,8 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
     elseif op == :xpath
         if typeseq(output_hint, Bool)
             return xpath(pd, :node, xp, args::Vector{(Symbol,Any)}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
-        elseif typeseq(output_hint,Vector{ParsedData}) || typeseq(output_hint,Vector) || typeseq(output_hint,Any)
-            out = ParsedData[]
+        elseif typeseq(output_hint,Vector{ETree}) || typeseq(output_hint,Vector) || typeseq(output_hint,Any)
+            out = ETree[]
             xpath(pd, :node, xp, args::Vector{(Symbol,Any)}, 1, Int[], 1, XPath_Collector(), out)
             return out
         else
@@ -1004,7 +1004,7 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
     assert(false)
 end
 
-function xpath_output(pd::ParsedData, output)
+function xpath_output(pd::ETree, output)
     if isa(output,Vector)
         if !contains(output,pd)
             push!(output, pd)
@@ -1042,7 +1042,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
     #implements axes: child, descendant, parent, ancestor, self, root, descendant-or-self, ancestor-or-self
     #implements filters: name
     if nodetype_filter === :element
-        if !isa(pd, ParsedData)
+        if !isa(pd, ETree)
             return false
         end
     elseif nodetype_filter === :comment
@@ -1080,8 +1080,8 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
             iscounted = bool::Int == p
         elseif isa(bool, Float64)
             iscounted = bool::Float64 == p
-        elseif isa(bool, Vector{ParsedData})
-            iscounted = length(bool::Vector{ParsedData}) != 0
+        elseif isa(bool, Vector{ETree})
+            iscounted = length(bool::Vector{ETree}) != 0
         else
             iscounted = xpath_boolean(bool)::Bool
         end
@@ -1095,7 +1095,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
     elseif axis == :filter_with_last
         if collector.filter === nothing
             assert(collector.index == 0)
-            collector.nodes = ParsedData[]
+            collector.nodes = ETree[]
             collector.filter = name
             collector.index = index
         else
@@ -1130,7 +1130,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
 
     # AXES
     else
-        if !isa(pd, ParsedData)
+        if !isa(pd, ETree)
             return false
         end
         if axis == :root
@@ -1163,8 +1163,8 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
                 end
             end
             for child in pd.elements
-                if isa(child, ParsedData)
-                    @xpath child::ParsedData
+                if isa(child, ETree)
+                    @xpath child::ETree
                 elseif isa(child, String)
                     @xpath child::String
                 else
@@ -1216,7 +1216,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
     return iscounted
 end
 
-function xpath_descendant(pd::ParsedData, name::Symbol, xp::XPath, filter::Vector{(Symbol,Any)}, index::Int, position::Vector{Int}, position_index::Int, collector::XPath_Collector, output)
+function xpath_descendant(pd::ETree, name::Symbol, xp::XPath, filter::Vector{(Symbol,Any)}, index::Int, position::Vector{Int}, position_index::Int, collector::XPath_Collector, output)
     iscounted = false
     for child in pd.elements
         if name::Symbol == :node
@@ -1224,9 +1224,9 @@ function xpath_descendant(pd::ParsedData, name::Symbol, xp::XPath, filter::Vecto
                 @xpath attr
             end
         end
-        if isa(child, ParsedData)
-            @xpath child::ParsedData
-            @xpath_descendant child::ParsedData
+        if isa(child, ETree)
+            @xpath child::ETree
+            @xpath_descendant child::ETree
         elseif isa(child, String)
             @xpath child::String
         else
@@ -1236,8 +1236,8 @@ function xpath_descendant(pd::ParsedData, name::Symbol, xp::XPath, filter::Vecto
     iscounted
 end
 
-getindex(pd::ParsedData,x::String) = xpath(pd,x)
-getindex(pd::ParsedData,x::XPath) = xpath(pd,x)
-getindex(pd::Vector{ParsedData},x::String) = xpath(pd, x)
-getindex(pd::Vector{ParsedData},x::XPath) = xpath(pd, x)
+getindex(pd::ETree,x::String) = xpath(pd,x)
+getindex(pd::ETree,x::XPath) = xpath(pd,x)
+getindex(pd::Vector{ETree},x::String) = xpath(pd, x)
+getindex(pd::Vector{ETree},x::XPath) = xpath(pd, x)
 

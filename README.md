@@ -6,21 +6,21 @@ Usage
 
 Has only three relevant APIs
 
-- ```xp_parse(s::String)``` returns a parsed object of type ```ParsedData```. 
+- ```xp_parse(s::String)``` returns a parsed object of type ```ETree``` (used to be called ```ParsedData```). 
 
-- ```find(pd::ParsedData, element_path::String)``` is used to search for elements within the parsed data object as returned by ```xp_parse```
+- ```find(pd::ETree, element_path::String)``` is used to search for elements within the parsed data object as returned by ```xp_parse```
 
-- ```(pd::ParsedData)[xpath::String]``` or ```xpath(pd::ParsedData, xpath::String)``` is also used to search for elements within the parsed
+- ```(pd::ETree)[xpath::String]``` or ```xpath(pd::ETree, xpath::String)``` is also used to search for elements within the parsed
 data object as returned by ```xp_parse```, but using a subset of the xpath specification
 
 
 Examples for ```element_path``` are:
 
-- ```"foo/bar/baz"``` returns an array of elements, i.e. ParsedData objects with tag ```"baz"``` under ```foo/bar```
+- ```"foo/bar/baz"``` returns an array of elements, i.e. ETree objects with tag ```"baz"``` under ```foo/bar```
 
-- ```"foo//baz"``` returns an array of elements, i.e. ParsedData objects with tag ```"baz"``` anywhere under ```foo```
+- ```"foo//baz"``` returns an array of elements, i.e. ETree objects with tag ```"baz"``` anywhere under ```foo```
 
-- ```"foo/bar/baz[1]"``` returns a ```ParsedData``` object representing the first element of type ```"baz"```
+- ```"foo/bar/baz[1]"``` returns a ```ETree``` object representing the first element of type ```"baz"```
 
 - ```"foo/bar/baz[1]{qux}"``` returns a String representing the attribute ```"qux"``` of the first element of type ```"baz"``` which
 has the ```"qux"``` attribute
@@ -42,14 +42,14 @@ If only one sub-element exists, the index is assumed to be 1 and may be omitted.
 - If ```element_path``` does NOT start with a ```/``` then the search starts with the children of the root pd (the first argument)
 
 
-You can also navigate the returned ParsedData object directly, i.e., without using ```find```. 
-The relevant members of ParsedData are:
+You can also navigate the returned ETree object directly, i.e., without using ```find```. 
+The relevant members of ETree are:
 
 ```
-type ParsedData
+type ETree
     name        # XML Tag 
     attr        # Dict of tag attributes as name-value pairs 
-    elements    # Vector of child nodes (ParsedData or String)
+    elements    # Vector of child nodes (ETree or String)
 end
 ```
 
