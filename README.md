@@ -53,8 +53,14 @@ type ParsedData
 end
 ```
 
-The xpath search consists of two parts: the parser and the search. Calling ```xpath(xp::String)``` will construct an XPath object that can be passed as the second argument to the xpath search (and reused by clearing ```xp.output``` between uses). This allows the construction of complex XPath expressions that are not currently valid in the parser, or simply reuse of the parsed output.
+The xpath search consists of two parts: the parser and the search. Calling ```xpath"some/xpath[expression]"``` ```xpath(xp::String)``` will construct an XPath object that can be passed as the second argument to the xpath search. The search can be used via ```parseddata[xpath"string"]``` or ```xpath(parseddata, xpath"string")``` (the use of the xpath string macro is not essential, but is recommended for performance, and the ability to use $ interpolation with automatic quoting, when it is implemented)
 
-The parser accepts most of the abbreviated path specifications and simple filters (abbreviated-form position and attribute selectors). It does not accept any extraneous whitespace and all attribute values must be contained in single quotes ```'```.
-
-The search engine, accepts all node path axes (child, descendant, parent, ancestor, self, root, descendant-or-self, ancestor-or-self) and several simple filters (position ```> < >= <= = !=```, name, attribute, attribute=). It adds last() to the value of any position selector less than 1, allowing reverse filtering.
+The parser handles most of the xpath 1.0 specification. The following features are currently missing:
+ * accessing parents of attributes
+ * several xpath functions (namespace-uri, lang, processing-instructions, and comment). name and local-name do not account for xmlns namespaces.
+ * parenthesized expressions
+ * xmlns namespace parsing
+ * correct ordering of output
+ * several xpath axes (namespace, following, following-sibling, preceding, preceding-sibling)
+ * $QName string interpolation
+ * &quot; and &apos;

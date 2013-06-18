@@ -9,7 +9,7 @@ include("lX_exports_h.jl")
 
 @c Ptr{XML_LChar} XML_ErrorString (Cint,) libexpat
 
-export ParsedData, XPHandle, xp_make_parser, xp_geterror, xp_close, xp_parse, find
+export ParsedData, XPHandle, xp_make_parser, xp_geterror, xp_close, xp_parse, find, @xpath_str
 
 DEBUG = false
 
@@ -60,13 +60,14 @@ function show(io::IO, pd::ParsedData)
         print(io,'<','/',pd.name,'>')
     end
 end
-function string_value(pd::ParsedData)
-    str = ""
+
+string_value(pd::ParsedData) = takebuf_string(string_value(pd,IOString()))
+function string_value(pd::ParsedData, str::IOString)
     for node in pd.elements
         if isa(node, String)
-            str *= node
+            write(str, node::String)
         elseif isa(node,ParsedData)
-            str *= string_value(node)
+            string_value(node::ParsedData, str)
         end
     end
     str
