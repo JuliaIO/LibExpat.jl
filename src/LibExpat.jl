@@ -9,7 +9,7 @@ include("lX_exports_h.jl")
 
 @c Ptr{XML_LChar} XML_ErrorString (Cint,) libexpat
 
-export ParsedData, XPHandle, xp_make_parser, xp_geterror, xp_close, xp_parse, find
+export ParsedData, XPHandle, xp_make_parser, xp_geterror, xp_close, xp_parse, find, @xpath_str
 
 DEBUG = false
 
