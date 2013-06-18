@@ -5,11 +5,11 @@ import Base: getindex, show
 include("lX_common_h.jl")
 include("lX_defines_h.jl")
 include("lX_expat_h.jl")
-include("lX_exports_h.jl")
+#include("lX_exports_h.jl")
 
 @c Ptr{XML_LChar} XML_ErrorString (Cint,) libexpat
 
-export ParsedData, XPHandle, xp_make_parser, xp_geterror, xp_close, xp_parse, find, @xpath_str
+export ParsedData, xp_parse, find, xpath, @xpath_str
 
 DEBUG = false
 
@@ -306,7 +306,7 @@ function find{T<:String}(pd::ParsedData, path::T)
     xp= Array((Symbol,Any),0)
     if path[1] == '/'
         # This will treat the incoming pd as the root of the tree
-        push!(xp, (:root,nothing))
+        push!(xp, (:root,:element))
         pathext[1] = pathext[1][2:end]
         #else - it will start searching the children....
     end
@@ -330,7 +330,7 @@ function find{T<:String}(pd::ParsedData, path::T)
             error("Invalid name $n")
         else
             node = m.captures[1]
-            push!(xp, (descendant,nothing))
+            push!(xp, (descendant,:element))
             descendant = :child
             push!(xp, (:name, convert(T,node)))
  
@@ -348,8 +348,8 @@ function find{T<:String}(pd::ParsedData, path::T)
             end
         end
     end
-    
-    pd = xpath(pd, XPath{T}(xp))
+
+    pd = xpath(pd, XPath{T,Vector{ParsedData}}((:xpath, xp)))
     if what == :node
         if idx
             if length(pd) == 1
