@@ -6,6 +6,8 @@
 #TODO: $QName string interpolation
 #TODO: &quot; and &apos;
 
+# XPath Spec: http://www.w3.org/TR/xpath/
+
 import Base.typeseq
 
 const xpath_axes = (String=>Symbol)[
@@ -977,7 +979,7 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
         if isempty(args)
             return xpath_number(pd)::Number
         else
-            return xpath_number(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any)):Number
+            return xpath_number(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::Number
         end
     elseif op == :sum
         a = 0.0

@@ -2,6 +2,8 @@ module LibExpat
 
 import Base: getindex, show
 
+@windows_only const libexpat = "libexpat-1"
+@unix_only const libexpat = "libexpat"
 include("lX_common_h.jl")
 include("lX_defines_h.jl")
 include("lX_expat_h.jl")
