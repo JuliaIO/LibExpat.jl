@@ -143,7 +143,7 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
         # i..j has text, k is current character
         havename::Bool = false
         axis::Symbol = :child
-        colon::Int = 0
+        colonpos::Int = 0
         doublecolon::Bool = false
         dot::Bool = false
         parens::Bool = false
@@ -164,7 +164,7 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
                 if !havename && j == 0
                     error("unexpected : at $k $i:$j")
                 end
-                if colon != 0
+                if colonpos != 0
                     if !havename
                         name = xpath[i:j]
                     end
@@ -177,17 +177,17 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
                         error("unknown axis $name")
                     end
                     axis = axis_::Symbol
-                    colon = 0
+                    colonpos = 0
                     doublecolon = true
                     i = k2
                     j = 0
                 else # colon == 0
-                    colon = k
+                    colonpos = k
                 end #if
             else # c != ":"
-                if colon != 0
-                    j = colon
-                    colon = 0
+                if colonpos != 0
+                    j = colonpos
+                    colonpos = 0
                 end #if
                 # 2b. Consume node name
                 if j == 0 && c == '*'
