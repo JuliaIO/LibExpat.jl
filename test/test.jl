@@ -26,7 +26,7 @@ ret = find(pd, "/ListBucketResult/Contents")
 @test isa(ret[2], ETree)
 println("PASSED 4")
 
-@test_fails find(pd, "/ListBucketResult/Contents#string")
+@test_throws find(pd, "/ListBucketResult/Contents#string")
 println("PASSED 5")
 
 ret = split(strip(find(pd, "/ListBucketResult/Contents[1]#string")),'\n')

@@ -195,7 +195,7 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
                     name = "*"
                     i = k = k2
                     break
-                elseif isspace(c) || contains(xpath_separators,c)
+                elseif isspace(c) || in(c, xpath_separators)
                     if j != 0
                         assert(!havename)
                         havename = true
@@ -359,7 +359,7 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
             end
             k = k2
             break
-        elseif isspace(c) || contains(xpath_separators, c)
+        elseif isspace(c) || in(c, xpath_separators)
             if c == '/'
                 j = k
             end
@@ -1008,7 +1008,7 @@ end
 
 function xpath_output(pd::ETree, output)
     if isa(output,Vector)
-        if !contains(output,pd)
+        if !in(pd, output)
             push!(output, pd)
         end
     end
@@ -1016,7 +1016,7 @@ function xpath_output(pd::ETree, output)
 end
 function xpath_output(string::String, output)
     if isa(output,Vector)
-        if !contains(output,string)
+        if !in(string, output)
             push!(output, string)
         end
     end
@@ -1025,7 +1025,7 @@ end
 function xpath_output(strings::Vector{String}, output)
     if isa(output,Vector)
         for string in strings
-            if !contains(output,string)
+            if !in(string, output)
                 push!(output, string)
             end
         end
