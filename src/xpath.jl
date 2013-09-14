@@ -743,9 +743,9 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
             end
         end
     elseif op == :number
-        return args
+        return args::Number
     elseif op == :string
-        return args
+        return args::String
     elseif op == :position
         assert(position > 0)
         return position
@@ -1077,7 +1077,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
             position[position_index] += 1
         end
         p = position[position_index]
-        bool = xpath_expr(pd, xp, name, p, -1, Bool)
+        bool = xpath_expr(pd, xp, name::(Symbol,Any), p, -1, Bool)
         if isa(bool, Int)
             iscounted = bool::Int == p
         elseif isa(bool, Float64)
@@ -1098,7 +1098,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
         if collector.filter === nothing
             assert(collector.index == 0)
             collector.nodes = ETree[]
-            collector.filter = name
+            collector.filter = name::(Symbol,Any)
             collector.index = index
         else
             assert(collector.filter === name)
