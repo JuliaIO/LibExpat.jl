@@ -64,3 +64,8 @@ The parser handles most of the xpath 1.0 specification. The following features a
  * several xpath axes (namespace, following, following-sibling, preceding, preceding-sibling)
  * $QName string interpolation
  * &quot; and &apos;
+ 
+IJulia Demonstration Notebook
+=============================
+[LibExpat IJulia Demo ](http://nbviewer.ipython.org/urls/raw.github.com/catawbasam/LibExpat.jl/master/libexpat_test.ipynb)
+
