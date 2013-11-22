@@ -67,5 +67,5 @@ The parser handles most of the xpath 1.0 specification. The following features a
  
 IJulia Demonstration Notebook
 =============================
-[LibExpat IJulia Demo ](http://nbviewer.ipython.org/urls/raw.github.com/catawbasam/LibExpat.jl/master/libexpat_test.ipynb)
+[LibExpat IJulia Demo ](http://nbviewer.ipython.org/urls/raw.github.com/amitmurthy/LibExpat.jl/master/libexpat_test.ipynb)
 
