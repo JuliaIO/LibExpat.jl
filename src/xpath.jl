@@ -98,7 +98,7 @@ macro xpath_parse(arg1, arg2)
     quote
         if $(esc(:ismacro))
             a2 = $(esc(arg2))
-            if !isa(a2,Expr)
+            if !isa(a2,Expr) && !isa(a2,String)
                 a2 = Expr(:quote,a2)
             end
             $(esc(:parsed)) = Expr(:call, :push!, $(esc(:parsed)), Expr(:tuple,Expr(:quote,$(esc(arg1))),a2))
@@ -111,7 +111,7 @@ macro xpath_fn(arg1, arg2)
     quote
         if $(esc(:ismacro))
             a2 = $(esc(arg2))
-            if !isa(a2,Expr)
+            if !isa(a2,Expr) && !isa(a2,String)
                 a2 = Expr(:quote,a2)
             end
             Expr(:tuple,Expr(:quote,$(esc(arg1))),a2)
@@ -209,7 +209,7 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
                         end
                         c, k3 = next(xpath,k2)
                         if c != ')'
-                            error("unexpected character in () at $k2")
+                            error("unexpected character before ) in nodetype() expression at $k2")
                         end
                         k = k3
                         parens = true
@@ -273,6 +273,9 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
                 @xpath_parse :attribute name
             end
             returntype = String
+        elseif name[1] == '$'
+            @xpath_parse axis :element
+            @xpath_parse :name Expr(:call, :string, esc(symbol(name[2:end])))
         else
             @xpath_parse axis :element
             if name != "*"
@@ -349,7 +352,13 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
             continue
         elseif c == '"' || c == '\''
             c2::Char = 0
-            while c2 != c
+            escape = false
+            while c2 != c && !escape
+                if ismacro && c2 == '\\' && !escape
+                    escape = true
+                else
+                    escape = false
+                end
                 j = k
                 k = k2
                 if done(xpath, k)
@@ -392,7 +401,72 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
         fn = @xpath_fn :number num
         returntype = Number
     elseif xpath[i] == '"' || xpath[i] == '\''
-        fn = @xpath_fn :string xpath[next(xpath,i)[2]:j]
+        if ismacro
+            str = PipeBuffer()
+            sexpr = Expr(:call, :string)
+            escape = false
+            var = parenvar = false
+            substr_k = next(xpath, i)[2]
+            j = next(xpath, j)[2]
+            while substr_k != j
+                c, substr_k = next(xpath,substr_k)
+                if var == true
+                    if nb_available(str) == 0
+                        if !parenvar && c == '('
+                            parenvar = true
+                            continue
+                        end
+                        if !isalpha(c) && c!="_"
+                            error("invalid interpolation syntax at $substr_k")
+                        end
+                        write(str,c)
+                        continue
+                    elseif !isalnum(c) && c!='_' && c!='!'
+                        push!(sexpr.args, Expr(:call,:string,esc(symbol(takebuf_string(str)))))
+                        var = false
+                        if parenvar
+                            if c != ')' # we aren't interested in writing a general purpose string parser
+                                error("invalid interpolation syntax at $substr_k")
+                            end
+                            continue
+                        end
+                    else
+                        write(str,c)
+                        continue
+                    end
+                end
+                if c == '\\'
+                    if escape
+                        write(str,c)
+                    else
+                        escape = true
+                    end
+                else
+                    escape = false
+                    if c == '$'
+                        var = true
+                        parenvar = false
+                        nb_available(str) != 0 && push!(sexpr.args, takebuf_string(str))
+                    else
+                        write(str,c)
+                    end
+                end
+            end
+            if var == true
+                (nb_available(str) != 0 && !parenvar) || error("invalid interpolation syntax at $j")
+                push!(sexpr.args, Expr(:call,:string,esc(symbol(takebuf_string(str)))))
+            else
+                nb_available(str) != 0 && push!(sexpr.args, takebuf_string(str))
+            end
+            if length(sexpr.args) == 1
+                sexpr = ""
+            elseif length(sexpr.args) == 2
+                sexpr = sexpr.args[2]
+            end
+        else
+            str = xpath[next(xpath,i)[2]:j]
+        end
+        fn = @xpath_fn :string sexpr
         returntype = String
     else
         if c == '('
