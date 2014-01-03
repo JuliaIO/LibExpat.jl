@@ -53,17 +53,18 @@ type ETree
 end
 ```
 
-The xpath search consists of two parts: the parser and the search. Calling ```xpath"some/xpath[expression]"``` ```xpath(xp::String)``` will construct an XPath object that can be passed as the second argument to the xpath search. The search can be used via ```parseddata[xpath"string"]``` or ```xpath(parseddata, xpath"string")``` (the use of the xpath string macro is not essential, but is recommended for performance, and the ability to use $ interpolation with automatic quoting, when it is implemented)
+The xpath search consists of two parts: the parser and the search. Calling ```xpath"some/xpath[expression]"``` ```xpath(xp::String)``` will construct an XPath object that can be passed as the second argument to the xpath search. The search can be used via ```parseddata[xpath"string"]``` or ```xpath(parseddata, xpath"string")```. The use of the xpath string macro is not required, but is recommended for performance, and the ability to use $variable interpolation. When xpath is called as a macro, it will parse path elements starting with $ as julia variables and perform limited string interpolation:
 
-The parser handles most of the xpath 1.0 specification. The following features are currently missing:
+    xpath"/a/$b/c[contains(.,'\$x$y$(z)!\'')]"
+
+The parser handles most of the XPath 1.0 specification. The following features are currently missing:
  * accessing parents of attributes
- * several xpath functions (namespace-uri, lang, processing-instructions, and comment). name and local-name do not account for xmlns namespaces.
+ * several xpath functions (namespace-uri, lang, processing-instructions, and comment). name and local-name do not account for xmlns namespaces correctly.
  * parenthesized expressions
  * xmlns namespace parsing
  * correct ordering of output
  * several xpath axes (namespace, following, following-sibling, preceding, preceding-sibling)
- * $QName string interpolation
- * &quot; and &apos;
+ * &quot; and &apos; (although you can use `\'` or `\"` as escape sequences when using the `xpath""` string macro)
  
 IJulia Demonstration Notebook
 =============================

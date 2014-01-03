@@ -1,7 +1,7 @@
 using LibExpat
 using Base.Test
 
-pd = xp_parse(open(readall, "t_s1.txt"))
+pd = xp_parse(open(readall, joinpath(splitdir(@__FILE__)[1],"t_s1.txt")))
 @test isa(pd, ETree)
 println("PASSED 1")
 
@@ -70,12 +70,12 @@ println("PASSED 12.1")
 @test (find(pd, "/ListBucketResult/Contents[2]/Owner/JUNK#string") == nothing)
 println("PASSED 12.2")
 
-pd = xp_parse(open(readall, "utf8.xml"))
+pd = xp_parse(open(readall, joinpath(splitdir(@__FILE__)[1],"utf8.xml")))
 @test isa(pd, ParsedData)
 println("PASSED 13")
 
 
-pd = xp_parse(open(readall, "wiki.xml"))
+pd = xp_parse(open(readall, joinpath(splitdir(@__FILE__)[1],"wiki.xml")))
 @test isa(pd, ParsedData)
 ret = find(pd, "/page/revision/id#string")
 @test ret == "557462847"
