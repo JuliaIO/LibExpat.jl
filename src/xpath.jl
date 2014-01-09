@@ -464,7 +464,7 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
                 sexpr = sexpr.args[2]
             end
         else
-            str = xpath[next(xpath,i)[2]:j]
+            sexpr = xpath[next(xpath,i)[2]:j]
         end
         fn = @xpath_fn :string sexpr
         returntype = String
