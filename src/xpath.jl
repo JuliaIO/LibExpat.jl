@@ -69,7 +69,7 @@ const xpath_functions = (String=>(Symbol,Int,Int,DataType))[ # (name, min args, 
 
 macro xpath_str(xpath)
     xp, returntype = xpath_parse(xpath, true)
-    quote XPath{$(typeof(xpath)), $(returntype)}($(xp)) end
+    :( XPath{$(typeof(xpath)), $(returntype)}($(xp)) )
 end
 function consume_whitespace(xpath, k)
     #consume leading space
@@ -94,8 +94,25 @@ function xpath_parse{T<:String}(xpath::T, ismacro=false)
     return parsed, returntype
 end
 
+#function xpath_parse_filters{T<:String}(xpath::T)
+#    k = consume_whitespace(xpath, start(xpath))
+#    c,k = next(xpath,k)
+#    if c != '['
+#        error("expected first character of xpath filter to be a '['")
+#    end
+#    k, parsed, returntype, has_last_fn = xpath_parse_expr(xpath, k, 0, false)
+#    if done(xpath,k)
+#        error("unexpected end to xpath filter, expected a ']' (stopped at $k)")
+#    end
+#    c,k = next(xpath,k)
+#    if !done(xpath,consume_whitespace(xpath,k)) || c != ']'
+#        error("failed to parse to the end of the xpath filter (stopped at $k)")
+#    end
+#    return parsed, returntype
+#end
+
 macro xpath_parse(arg1, arg2)
-    quote
+    :(
         if $(esc(:ismacro))
             a2 = $(esc(arg2))
             if !isa(a2,Expr) && !isa(a2,String)
@@ -105,10 +122,10 @@ macro xpath_parse(arg1, arg2)
         else
             push!($(esc(:parsed))::Vector{(Symbol, Any)}, ($(arg1),$(arg2)))
         end
-    end
+    )
 end
 macro xpath_fn(arg1, arg2)
-    quote
+    :(
         if $(esc(:ismacro))
             a2 = $(esc(arg2))
             if !isa(a2,Expr) && !isa(a2,String)
@@ -118,7 +135,7 @@ macro xpath_fn(arg1, arg2)
         else
             ($(arg1),$(arg2))
         end
-    end
+    )
 end
 
 function xpath_parse{T<:String}(xpath::T, k, ismacro)
@@ -339,7 +356,6 @@ end # function
 
 function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
     i = k = consume_whitespace(xpath, k)
-    token::T = ""
     j = 0
     prevtokenspecial = true
     while !done(xpath, k)
@@ -730,6 +746,32 @@ end
 xpath{T,returntype}(pd, xp::XPath{T,returntype}) = xpath_expr(pd, xp, xp.filter, 1, -1, returntype)::returntype
 xpath{T<:String}(pd, filter::T) = xpath(pd, xpath(filter))
 
+function xpath_combined_checked(pd1::XPath, pd2::XPath)
+    a1 = pd1.filter[1]
+    a2 = pd2.filter[1]
+    if a1 == a2
+        filt = a1
+    else
+        if !(( a1 == :xpath || a1 == :xpath_str || a1 == :xpath_any) &&
+            (a2 == :xpath || a2 == :xpath_str || a2 == :xpath_any))
+            error("can't combine xpath expressions that don't return XML nodes")
+        end
+        filt = :xpath_any
+    end
+    xp = Array((Symbol, Any), 0)
+    push!(xp, (:(|),(pd1.filter[2], pd2.filter[2])))
+    return (filt, xp)
+end
+Base.|{T,S}(pd1::XPath{T}, pd2::XPath{S}) =
+    XPath{Union(T,S),Any}( xpath_combined_checked(pd1,pd2) )
+Base.|{T,S,ret1<:Vector,ret2<:Vector}(pd1::XPath{T,ret1}, pd2::XPath{S,ret2}) =
+    XPath{Union(T,S),Vector{Any}}( xpath_combined_checked(pd1,pd2) )
+Base.|{T,S,ret<:Vector}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
+    XPath{Union(T,S),ret}( xpath_combined_checked(pd1,pd2) )
+Base.|{T,S,ret}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
+    XPath{Union(T,S),ret}( xpath_combined_checked(pd1,pd2) )
+#Base.(:*){T,S,ret}(pd::XPath{T,ret}, filters::S) = XPath{Union(T,S),ret}( ??? )
+
 
 xpath_boolean(a::Bool) = a
 xpath_boolean(a::Int) = a != 0
@@ -1108,10 +1150,10 @@ function xpath_output(strings::Vector{String}, output)
 end
 
 macro xpath(node)
-    esc( quote iscounted |= xpath($(node), name::Symbol, xp, filter, index, position, position_index, collector, output) end )
+    esc( :( iscounted |= xpath($(node), name::Symbol, xp, filter, index, position, position_index, collector, output) ) )
 end
 macro xpath_descendant(node)
-    esc( quote iscounted |= xpath_descendant($(node), name::Symbol, xp, filter, index, position, position_index, collector, output) end )
+    esc( :( iscounted |= xpath_descendant($(node), name::Symbol, xp, filter, index, position, position_index, collector, output) ) )
 end
 function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vector{(Symbol,Any)}, index::Int, position::Vector{Int}, position_index::Int, collector::XPath_Collector, output)
     #return value is whether the node is "true" for the input to a boolean function
