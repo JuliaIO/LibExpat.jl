@@ -113,8 +113,7 @@ function xp_make_parser(sep='\0')
 end
 
 
-function xp_geterror(xph::XPHandle)
-    p = xph.parser
+function xp_geterror (p::Union(XML_Parser,Nothing))
     ec = XML_GetErrorCode(p)
     
     if ec != 0 
@@ -130,6 +129,10 @@ function xp_geterror(xph::XPHandle)
         return  ( "", 0, 0, 0)
      end 
      
+end
+
+function xp_geterror(xph::XPHandle)
+    return xp_geterror(xph.parser)
 end
 
 
@@ -194,41 +197,47 @@ function default_expand (p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
 end
 cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{Uint8}, Cint))
 
+function attrs_in_to_dict(attrs_in::Ptr{Ptr{Uint8}})
+    attrs = Dict{String,String}()
 
-function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
-    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    name = bytestring(name)
-    @DBG_PRINT ("Start Elem name : $name,  current element: $(xph.pdata.name) ")
-    
-    new_elem = ETree(name)
-    new_elem.parent = xph.pdata 
-
-    push!(xph.pdata.elements, new_elem)
-    @DBG_PRINT ("Found  $name")
-
-    xph.pdata = new_elem
-    
     if (attrs_in != C_NULL)
         i = 1
         attr = unsafe_load(attrs_in, i)
         while (attr != C_NULL)
             k = bytestring(attr)
-            
+
             i=i+1
             attr = unsafe_load(attrs_in, i)
-            
+
             if (attr == C_NULL) error("Attribute does not have a name!") end
             v = bytestring(attr)
-            
-            new_elem.attr[k] = v
+
+            attrs[k] = v
 
             @DBG_PRINT ("$k, $v in $name")
-            
+
             i=i+1
             attr = unsafe_load(attrs_in, i)
         end
     end
-    
+
+    return attrs
+end
+
+function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
+    xph = unsafe_pointer_to_objref(p_xph)::XPHandle
+    name = bytestring(name)
+    @DBG_PRINT ("Start Elem name : $name,  current element: $(xph.pdata.name) ")
+
+    new_elem = ETree(name)
+    new_elem.parent = xph.pdata
+
+    push!(xph.pdata.elements, new_elem)
+    @DBG_PRINT ("Found  $name")
+
+    merge!(new_elem.attr, attrs_in_to_dict(attrs_in))
+    xph.pdata = new_elem
+
     return
 end
 cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Ptr{Uint8}}))
@@ -388,5 +397,9 @@ function find{T<:String}(pd::ETree, path::T)
 end 
 
 include("xpath.jl")
+
+include("streaming.jl")
+export XPCallbacks, XPStreamHandler
+export parse, stop, pause, resume, free, parsefile
 
 end
