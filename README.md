@@ -4,6 +4,9 @@ LibExpat - Julia wrapper for libexpat
 Usage
 =====
 
+XPath queries on fully parsed tree
+----------------------------------
+
 Has only three relevant APIs
 
 - ```xp_parse(s::String)``` returns a parsed object of type ```ETree``` (used to be called ```ParsedData```). 
@@ -65,6 +68,32 @@ The parser handles most of the XPath 1.0 specification. The following features a
  * correct ordering of output
  * several xpath axes (namespace, following, following-sibling, preceding, preceding-sibling)
  * &quot; and &apos; (although you can use `\'` or `\"` as escape sequences when using the `xpath""` string macro)
+
+Streaming XML parsing 
+---------------------
+
+If you do not want to store the whole tree in memory, LibExpat offers the abbility to define callbacks for streaming parsing too. To parse a document, you creata a new `XPCallbacks` instance and define all callbacks you want to receive.
+
+```Julia
+type XPCallbacks
+    # These are all (yet) available callbacks, by default initialised with a dummy function.
+    # Each callback will be handed as first argument a XPStreamHandler and the following other parameters:
+    start_cdata     # (..) -- Start of a CDATA section
+    end_cdata       # (..) -- End of a CDATA sections
+    comment         # (.., comment::String) -- A comment
+    character_data  # (.., txt::String) -- A character data section
+    default         # (.., txt::String) -- Handler for any characters in the document which wouldn't otherwise be handled.
+    default_expand  # (.., txt::String) -- Default handler that doesn't inhibit the expansion of internal entity reference.
+    start_element   # (.., name::String, attrs::Dict{String,String}) -- Start of a tag/element
+    end_element     # (.., name::String) -- End of a tag/element
+    start_namespace # (.., prefix::String, uri::String) -- Start of a namespace declaration 
+    end_namespace   # (.., prefix::String) -- End of the scope of a namespace
+end
+```
+ 
+Using an initialized `XPCallbacks` object, one can start parsing using `xp_streaming_parse` which takes the XML document as a string, the `XPCallbacks` object and an arbitrary data object which can be used to reference some context during parsing. This data object is accessible through the `data` attribute of the `XPStreamHandler` instance passed to each callback.
+
+If your data is too large to fit into memory, as an alternative you can use `xp_streaming_parsefile` to parse the XML document line-by-line (the number of lines read and passed to expat is controlled by the keyword argument `bufferlines`).
  
 IJulia Demonstration Notebook
 =============================

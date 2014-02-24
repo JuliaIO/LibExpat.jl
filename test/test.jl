@@ -81,3 +81,79 @@ ret = find(pd, "/page/revision/id#string")
 @test ret == "557462847"
 println("PASSED 14")
 
+
+# Check streaming parse functionality
+found_start_element = false
+found_end_element = false
+start_element_name = ""
+first_attr_start_element = ""
+first_attrval_start_element = ""
+end_element_name = ""
+
+cbs = XPCallbacks()
+cbs.start_element = function (h, name, attrs)
+    global found_start_element = true
+    global start_element_name = name
+    global first_attr_start_element = collect(keys(attrs))[1]
+    global first_attrval_start_element = attrs[first_attr_start_element]
+end
+
+cbs.end_element = function (h, name)
+    global found_end_element = true
+    global end_element_name = name
+end
+
+parse("<test id=\"someid\">somecontent</test>", cbs)
+
+@test found_start_element
+println("PASSED 15.1")
+@test found_end_element
+println("PASSED 15.2")
+@test (start_element_name == "test")
+println("PASSED 15.3")
+@test (first_attr_start_element == "id")
+println("PASSED 15.4")
+@test (first_attrval_start_element == "someid")
+println("PASSED 15.5")
+@test (end_element_name == "test")
+println("PASSED 15.6")
+
+# Check streaming file functionality with more callbacks
+cdata_started = false
+cdata_ended = false
+cdata_section = ""
+comment = ""
+in_cdata_section = false
+
+cbs = XPCallbacks()
+
+cbs.start_cdata = function (h)
+    global in_cdata_section = true
+    global cdata_started = true
+end
+
+cbs.end_cdata = function (h)
+    global in_cdata_section = false
+    global cdata_ended = true
+end
+
+cbs.comment = function (h, txt)
+    global comment = strip(txt)
+end
+
+cbs.character_data = function (h, data)
+    if in_cdata_section
+        global cdata_section = string(cdata_section, data)
+    end
+end
+
+parsefile(joinpath(splitdir(@__FILE__)[1], "graph.graphml"), cbs)
+
+@test cdata_started
+println("PASSED 16.1")
+@test cdata_ended
+println("PASSED 16.2")
+@test (strip(cdata_section) == "<Some CDATA section>")
+println("PASSED 16.3")
+@test (comment == "This is just a comment.")
+println("PASSED 16.4")

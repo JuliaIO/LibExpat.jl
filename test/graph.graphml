@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+    <graph id="G" edgedefault="undirected">
+        <!-- This is just a comment. -->
+        <key id="attr1" for="edge" attr.name="attr1" attr.type="int"/>
+        <key id="attr2" for="edge" attr.name="attr2" attr.type="string" />
+        <node id="89d7eb8e2c167b893eb5c52b7272f5e3" />
+        <node id="99d39d07c5d27f6d314924b32dd72cd7" />
+        <edge source="89d7eb8e2c167b893eb5c52b7272f5e3" target="99d39d07c5d27f6d314924b32dd72cd7">
+            <data key="attr1">17</data>
+            <data key="attr2">
+                <![CDATA[
+                <Some CDATA section>
+                ]]>
+            </data>
+        </edge>
+    </graph>
+</graphml>
+
