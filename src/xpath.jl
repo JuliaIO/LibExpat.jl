@@ -805,7 +805,7 @@ xpath_string(a::Vector) = length(a) == 0 ? "" : xpath_string(a[1])
 xpath_string(a::ETree) = string_value(a)
 
 function xpath_normalize(s::String)
-    normal = IOString()
+    normal = IOBuffer()
     space = false
     first = false
     for c in s
@@ -830,7 +830,7 @@ end
 function xpath_translate(a::String,b::String,c::String)
     b = collect(b)
     c = collect(c)
-    tr = IOString()
+    tr = IOBuffer()
     for ch in a
         i = findfirst(b,ch)
         if i == 0
@@ -1040,7 +1040,7 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
             return xpath_string(pd)::String
         end
     elseif op == :concat
-        a = IOString()
+        a = IOBuffer()
         for arg = args
             write(a, xpath_string(xpath_expr(pd, xp, arg::(Symbol,Any), position, last, Any))::String)
         end

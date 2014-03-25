@@ -65,8 +65,8 @@ function show(io::IO, pd::ETree)
     end
 end
 
-string_value(pd::ETree) = takebuf_string(string_value(pd,IOString()))
-function string_value(pd::ETree, str::IOString)
+string_value(pd::ETree) = takebuf_string(string_value(pd,IOBuffer()))
+function string_value(pd::ETree, str::IOBuffer)
     for node in pd.elements
         if isa(node, String)
             write(str, node::String)
