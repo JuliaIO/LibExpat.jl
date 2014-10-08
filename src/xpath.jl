@@ -10,7 +10,7 @@
 
 import Base.typeseq
 
-const xpath_axes = (String=>Symbol)[
+const xpath_axes = Dict{String, Symbol}(
     "ancestor" => :ancestor,
     "ancestor-or-self" => :ancestor_or_self,
     "attribute" => :attribute,
@@ -23,15 +23,15 @@ const xpath_axes = (String=>Symbol)[
     "parent" => :parent,
     "preceding" => :preceding,
     "preceding-sibling" => :preceding_sibling,
-    "self" => :self]
+    "self" => :self)
 
-const xpath_types = (String=>(Symbol,DataType))[
+const xpath_types = Dict{String, (Symbol,DataType)}(
     "comment" => (:comment,String),
     "text" => (:text,String),
 #    "processing-instruction" => (:processing_instruction, ??),
-    "node" => (:node,Any)]
+    "node" => (:node,Any))
 
-const xpath_functions = (String=>(Symbol,Int,Int,DataType))[ # (name, min args, max args)
+const xpath_functions = Dict{String, (Symbol,Int,Int,DataType)}( # (name, min args, max args)
     #node-set
     "last" => (:last,0,0,Int),
     "position" => (:position,0,0,Int),
@@ -64,8 +64,7 @@ const xpath_functions = (String=>(Symbol,Int,Int,DataType))[ # (name, min args, 
     "sum" => (:sum,1,1,Float64),
     "floor" => (:floor,1,1,Int),
     "ceiling" => (:ceiling,1,1,Int),
-    "round" => (:round,1,1,Float64),
-    ]
+    "round" => (:round,1,1,Float64))
 
 macro xpath_str(xpath)
     xp, returntype = xpath_parse(xpath, true)
