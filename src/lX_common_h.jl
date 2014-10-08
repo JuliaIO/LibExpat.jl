@@ -108,7 +108,7 @@ end
 @ctypedef XML_SkippedEntityHandler Ptr{Void}
 type XML_Encoding
   map::Void
-  data::Ptr{None}
+  data::Ptr{Void}
   convert::Ptr{Void}
   release::Ptr{Void}
 end

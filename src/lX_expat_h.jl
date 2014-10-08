@@ -30,12 +30,12 @@
 @c None XML_SetEndNamespaceDeclHandler (XML_Parser, XML_EndNamespaceDeclHandler) libexpat
 @c None XML_SetNotStandaloneHandler (XML_Parser, XML_NotStandaloneHandler) libexpat
 @c None XML_SetExternalEntityRefHandler (XML_Parser, XML_ExternalEntityRefHandler) libexpat
-@c None XML_SetExternalEntityRefHandlerArg (XML_Parser, Ptr{None}) libexpat
+@c None XML_SetExternalEntityRefHandlerArg (XML_Parser, Ptr{Void}) libexpat
 @c None XML_SetSkippedEntityHandler (XML_Parser, XML_SkippedEntityHandler) libexpat
-@c None XML_SetUnknownEncodingHandler (XML_Parser, XML_UnknownEncodingHandler, Ptr{None}) libexpat
+@c None XML_SetUnknownEncodingHandler (XML_Parser, XML_UnknownEncodingHandler, Ptr{Void}) libexpat
 @c None XML_DefaultCurrent (XML_Parser,) libexpat
 @c None XML_SetReturnNSTriplet (XML_Parser, Int32) libexpat
-@c None XML_SetUserData (XML_Parser, Ptr{None}) libexpat
+@c None XML_SetUserData (XML_Parser, Ptr{Void}) libexpat
 @c Int32 XML_SetEncoding (XML_Parser, Ptr{XML_Char}) libexpat
 @c None XML_UseParserAsHandlerArg (XML_Parser,) libexpat
 @c Int32 XML_UseForeignDTD (XML_Parser, XML_Bool) libexpat
@@ -44,7 +44,7 @@
 @c Int32 XML_GetSpecifiedAttributeCount (XML_Parser,) libexpat
 @c Int32 XML_GetIdAttributeIndex (XML_Parser,) libexpat
 @c Int32 XML_Parse (XML_Parser, Ptr{Uint8}, Int32, Int32) libexpat
-@c Ptr{None} XML_GetBuffer (XML_Parser, Int32) libexpat
+@c Ptr{Void} XML_GetBuffer (XML_Parser, Int32) libexpat
 @c Int32 XML_ParseBuffer (XML_Parser, Int32, Int32) libexpat
 @c Int32 XML_StopParser (XML_Parser, XML_Bool) libexpat
 @c Int32 XML_ResumeParser (XML_Parser,) libexpat
@@ -59,9 +59,9 @@
 @c Int32 XML_GetCurrentByteCount (XML_Parser,) libexpat
 @c Ptr{Uint8} XML_GetInputContext (XML_Parser, Ptr{Int32}, Ptr{Int32}) libexpat
 @c None XML_FreeContentModel (XML_Parser, Ptr{XML_Content}) libexpat
-@c Ptr{None} XML_MemMalloc (XML_Parser, size_t) libexpat
-@c Ptr{None} XML_MemRealloc (XML_Parser, Ptr{None}, size_t) libexpat
-@c None XML_MemFree (XML_Parser, Ptr{None}) libexpat
+@c Ptr{Void} XML_MemMalloc (XML_Parser, size_t) libexpat
+@c Ptr{Void} XML_MemRealloc (XML_Parser, Ptr{Void}, size_t) libexpat
+@c None XML_MemFree (XML_Parser, Ptr{Void}) libexpat
 @c None XML_ParserFree (XML_Parser,) libexpat
 @c Ptr{XML_LChar} XML_ErrorString (Void,) libexpat
 @c Ptr{XML_LChar} XML_ExpatVersion () libexpat
