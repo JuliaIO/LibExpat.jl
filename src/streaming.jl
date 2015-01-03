@@ -209,15 +209,16 @@ function parsefile(filename::String,callbacks::XPCallbacks; bufferlines=1024, da
     # TODO: Support suspending for files too
     suspended = false
     file = open(filename, "r")
-
     try
+        io = IOBuffer()
         while !eof(file)
             i::Int = 0
-            txt::String = ""
+            truncate(io, 0)
             while i < bufferlines && !eof(file)
-                txt *= readline(file)
+                write(io, readline(file))
                 i += 1
             end
+            txt = bytestring(io)
             rc = XML_Parse(h.parser, txt, length(txt.data), 0)
             if (rc != XML_STATUS_OK) && (XML_GetErrorCode(h.parser) != XML_ERROR_ABORTED)
                 # Do not fail if the user aborted the parsing
