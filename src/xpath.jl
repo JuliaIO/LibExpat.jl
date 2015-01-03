@@ -9,8 +9,9 @@
 # XPath Spec: http://www.w3.org/TR/xpath/
 
 import Base.typeseq
+import Compat
 
-const xpath_axes = Dict{String, Symbol}(
+const xpath_axes = Compat.@Dict(
     "ancestor" => :ancestor,
     "ancestor-or-self" => :ancestor_or_self,
     "attribute" => :attribute,
@@ -25,13 +26,13 @@ const xpath_axes = Dict{String, Symbol}(
     "preceding-sibling" => :preceding_sibling,
     "self" => :self)
 
-const xpath_types = Dict{String, (Symbol,DataType)}(
+const xpath_types = Compat.@Dict(
     "comment" => (:comment,String),
     "text" => (:text,String),
 #    "processing-instruction" => (:processing_instruction, ??),
     "node" => (:node,Any))
 
-const xpath_functions = Dict{String, (Symbol,Int,Int,DataType)}( # (name, min args, max args)
+const xpath_functions = Compat.@Dict( # (name, min args, max args)
     #node-set
     "last" => (:last,0,0,Int),
     "position" => (:position,0,0,Int),
