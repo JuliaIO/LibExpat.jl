@@ -83,7 +83,7 @@ function consume_whitespace(xpath, k)
     k
 end
 
-const xpath_separators = Set('+','(',')','[',']','<','>','!','=','|','/','*',',')
+const xpath_separators = Set(['+','(',')','[',']','<','>','!','=','|','/','*',','])
 
 function xpath_parse{T<:String}(xpath::T, ismacro=false)
     k = start(xpath)
@@ -542,7 +542,7 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
             if done(xpath,k2)
                 error("unexpected end to xpath")
             end
-            c3,k3 = next(xpath,k2)            
+            c3,k3 = next(xpath,k2)
             if c3 != 'd'
                 error("invalid operator $c at $k")
             end
@@ -580,7 +580,7 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
             end
             returntype = Bool
         elseif c1 == '<'
-            op_precedence = 3        
+            op_precedence = 3
             if c2 == '='
                 op = :(<=)
                 k = k2
@@ -589,7 +589,7 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
                 k = k1
             end
             returntype = Bool
-    
+
         elseif c1 == '+'
             op_precedence = 4
             op = :(+)
@@ -600,8 +600,8 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
             op = :(-)
             k = k1
             returntype = Number
-    
-        else # highest precedence (5) 
+
+        else # highest precedence (5)
             if done(xpath,k2)
                 error("unexpected end to xpath")
             end
@@ -629,7 +629,7 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
         end
         k, fn2, rt2, has_fn_last2 = xpath_parse_expr(xpath, k, op_precedence+1, ismacro)
         k = consume_whitespace(xpath, k)
-        
+
         if ismacro
             fn = Expr(:tuple,:(:binop),Expr(:tuple,Expr(:quote,op), fn, fn2))
         else
@@ -1303,7 +1303,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
         #elseif axis == :preceding-sibling
 
         #TODO: axis in xpath_types
-            
+
         # ERROR - NO MATCH
         else
             error("encountered unsupported axis $axis")
