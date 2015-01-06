@@ -1,6 +1,9 @@
 LibExpat - Julia wrapper for libexpat
 =====================================
 
+[![Build Status](https://travis-ci.org/amitmurthy/LibExpat.jl.svg?branch=master)](https://travis-ci.org/amitmurthy/LibExpat.jl)
+[![Coverage Status](http://img.shields.io/coveralls/amitmurthy/LibExpat.jl.svg)](https://coveralls.io/r/amitmurthy/LibExpat.jl)
+
 Usage
 =====
 
@@ -9,7 +12,7 @@ XPath queries on fully parsed tree
 
 Has only three relevant APIs
 
-- ```xp_parse(s::String)``` returns a parsed object of type ```ETree``` (used to be called ```ParsedData```). 
+- ```xp_parse(s::String)``` returns a parsed object of type ```ETree``` (used to be called ```ParsedData```).
 
 - ```find(pd::ETree, element_path::String)``` is used to search for elements within the parsed data object as returned by ```xp_parse```
 
@@ -45,13 +48,13 @@ If only one sub-element exists, the index is assumed to be 1 and may be omitted.
 - If ```element_path``` does NOT start with a ```/``` then the search starts with the children of the root pd (the first argument)
 
 
-You can also navigate the returned ETree object directly, i.e., without using ```find```. 
+You can also navigate the returned ETree object directly, i.e., without using ```find```.
 The relevant members of ETree are:
 
 ```
 type ETree
-    name        # XML Tag 
-    attr        # Dict of tag attributes as name-value pairs 
+    name        # XML Tag
+    attr        # Dict of tag attributes as name-value pairs
     elements    # Vector of child nodes (ETree or String)
 end
 ```
@@ -69,7 +72,7 @@ The parser handles most of the XPath 1.0 specification. The following features a
  * several xpath axes (namespace, following, following-sibling, preceding, preceding-sibling)
  * &quot; and &apos; (although you can use `\'` or `\"` as escape sequences when using the `xpath""` string macro)
 
-Streaming XML parsing 
+Streaming XML parsing
 ---------------------
 
 If you do not want to store the whole tree in memory, LibExpat offers the abbility to define callbacks for streaming parsing too. To parse a document, you creata a new `XPCallbacks` instance and define all callbacks you want to receive.
@@ -86,15 +89,15 @@ type XPCallbacks
     default_expand  # (.., txt::String) -- Default handler that doesn't inhibit the expansion of internal entity reference.
     start_element   # (.., name::String, attrs::Dict{String,String}) -- Start of a tag/element
     end_element     # (.., name::String) -- End of a tag/element
-    start_namespace # (.., prefix::String, uri::String) -- Start of a namespace declaration 
+    start_namespace # (.., prefix::String, uri::String) -- Start of a namespace declaration
     end_namespace   # (.., prefix::String) -- End of the scope of a namespace
 end
 ```
- 
+
 Using an initialized `XPCallbacks` object, one can start parsing using `xp_streaming_parse` which takes the XML document as a string, the `XPCallbacks` object and an arbitrary data object which can be used to reference some context during parsing. This data object is accessible through the `data` attribute of the `XPStreamHandler` instance passed to each callback.
 
 If your data is too large to fit into memory, as an alternative you can use `xp_streaming_parsefile` to parse the XML document line-by-line (the number of lines read and passed to expat is controlled by the keyword argument `bufferlines`).
- 
+
 IJulia Demonstration Notebook
 =============================
 [LibExpat IJulia Demo ](http://nbviewer.ipython.org/urls/raw.github.com/amitmurthy/LibExpat.jl/master/libexpat_test.ipynb)

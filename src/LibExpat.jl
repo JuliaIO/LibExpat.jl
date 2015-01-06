@@ -1,5 +1,6 @@
 module LibExpat
 
+using Compat
 import Base: getindex, show
 
 @windows_only const libexpat = "libexpat-1"
@@ -18,8 +19,8 @@ DEBUG = false
 
 macro DBG_PRINT (s)
     quote
-        if (DEBUG) 
-            println($s); 
+        if (DEBUG)
+            println($s);
         end
     end
 end
@@ -32,7 +33,7 @@ type ETree
     # List of child elements.
     elements::Vector{Union(ETree,String)}
     parent::ETree
-    
+
     ETree() = ETree("")
     function ETree(name)
         pd=new(
@@ -82,19 +83,19 @@ type XPHandle
   parser::Union(XML_Parser,Nothing)
   pdata::ETree
   in_cdata::Bool
-  
+
   XPHandle(p) = new(p, ETree(""), false)
 end
 
 
-function xp_make_parser(sep='\0') 
+function xp_make_parser(sep='\0')
     p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
     if (p == C_NULL) error("XML_ParserCreate failed") end
 
     xph = XPHandle(p)
     p_xph = pointer_from_objref(xph)
     XML_SetUserData(p, p_xph);
-    
+
     XML_SetCdataSectionHandler(p, cb_start_cdata, cb_end_cdata)
     XML_SetCharacterDataHandler(p, cb_cdata)
     XML_SetCommentHandler(p, cb_comment)
@@ -107,7 +108,7 @@ function xp_make_parser(sep='\0')
 #    XML_SetNotStandaloneHandler(p, f_NotStandalone)
 #    XML_SetProcessingInstructionHandler(p, f_ProcessingInstruction)
 #    XML_SetUnparsedEntityDeclHandler(p, f_UnparsedEntityDecl)
-#    XML_SetStartDoctypeDeclHandler(p, f_StartDoctypeDecl) 
+#    XML_SetStartDoctypeDeclHandler(p, f_StartDoctypeDecl)
 
     return xph
 end
@@ -115,20 +116,20 @@ end
 
 function xp_geterror (p::Union(XML_Parser,Nothing))
     ec = XML_GetErrorCode(p)
-    
-    if ec != 0 
+
+    if ec != 0
         @DBG_PRINT (XML_GetErrorCode(p))
         @DBG_PRINT (bytestring(XML_ErrorString(XML_GetErrorCode(p))))
-        
-        return  ( bytestring(XML_ErrorString(XML_GetErrorCode(p))), 
-                XML_GetCurrentLineNumber(p), 
-                XML_GetCurrentColumnNumber(p) + 1, 
+
+        return  ( bytestring(XML_ErrorString(XML_GetErrorCode(p))),
+                XML_GetCurrentLineNumber(p),
+                XML_GetCurrentColumnNumber(p) + 1,
                 XML_GetCurrentByteIndex(p) + 1
             )
      else
         return  ( "", 0, 0, 0)
-     end 
-     
+     end
+
 end
 
 function xp_geterror(xph::XPHandle)
@@ -136,13 +137,13 @@ function xp_geterror(xph::XPHandle)
 end
 
 
-function xp_close (xph::XPHandle) 
+function xp_close (xph::XPHandle)
   if (xph.parser != nothing)    XML_ParserFree(xph.parser) end
   xph.parser = nothing
 end
 
 
-function start_cdata (p_xph::Ptr{Void}) 
+function start_cdata (p_xph::Ptr{Void})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     @DBG_PRINT ("Found StartCdata")
     xph.in_cdata = true
@@ -150,7 +151,7 @@ function start_cdata (p_xph::Ptr{Void})
 end
 cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
 
-function end_cdata (p_xph::Ptr{Void}) 
+function end_cdata (p_xph::Ptr{Void})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     @DBG_PRINT ("Found EndCdata")
     xph.in_cdata = false
@@ -161,17 +162,17 @@ cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 
 function cdata (p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-  
+
     txt = bytestring(s, int(len))
     push!(xph.pdata.elements, txt)
-    
+
     @DBG_PRINT ("Found CData : " * txt)
     return;
 end
 cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{Uint8}, Cint))
 
 
-function comment (p_xph::Ptr{Void}, data::Ptr{Uint8}) 
+function comment (p_xph::Ptr{Void}, data::Ptr{Uint8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
     @DBG_PRINT ("Found comment : " * txt)
@@ -247,15 +248,15 @@ function end_element (p_xph::Ptr{Void}, name::Ptr{Uint8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(name)
     @DBG_PRINT ("End element: $txt, current element: $(xph.pdata.name) ")
-    
+
     xph.pdata = xph.pdata.parent
-    
+
     return;
 end
 cb_end_element = cfunction(end_element, Void, (Ptr{Void},Ptr{Uint8}))
 
 
-function start_namespace (p_xph::Ptr{Void}, prefix::Ptr{Uint8}, uri::Ptr{Uint8}) 
+function start_namespace (p_xph::Ptr{Void}, prefix::Ptr{Uint8}, uri::Ptr{Uint8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = bytestring(prefix)
     uri = bytestring(uri)
@@ -282,11 +283,11 @@ cb_end_namespace = cfunction(end_namespace, Void, (Ptr{Void},Ptr{Uint8}))
 function xp_parse(txt::String)
     xph = nothing
     xph = xp_make_parser()
-    
+
     try
         rc = XML_Parse(xph.parser, txt, length(txt.data), 1)
         if (rc != XML_STATUS_OK) error("Error parsing document : $rc") end
-        
+
         # The root element will only have a single child element in a well formed XML
         return xph.pdata.elements[1]
     catch e
@@ -294,7 +295,7 @@ function xp_parse(txt::String)
         (err, line, column, pos) = xp_geterror(xph)
         @DBG_PRINT ("$e, $err, $line, $column, $pos")
         rethrow("$e, $err, $line, $column, $pos")
-    
+
     finally
         if (xph != nothing) xp_close(xph) end
     end
@@ -307,7 +308,7 @@ function find{T<:String}(pd::ETree, path::T)
     attr = ""
 
     pathext = split(path, "#")
-    if (length(pathext)) > 2 error("Invalid path syntax") 
+    if (length(pathext)) > 2 error("Invalid path syntax")
     elseif (length(pathext) == 2)
         if (pathext[2] == "string")
             what = :string
@@ -346,7 +347,7 @@ function find{T<:String}(pd::ETree, path::T)
             push!(xp, (descendant,:element))
             descendant = :child
             push!(xp, (:name, convert(T,node)))
- 
+
             if m.captures[5] != nothing
                 if (n == nodes[end])
                     what = :attr
@@ -394,7 +395,7 @@ function find{T<:String}(pd::ETree, path::T)
     end
 
     return nothing
-end 
+end
 
 include("xpath.jl")
 

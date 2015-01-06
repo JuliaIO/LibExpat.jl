@@ -1,7 +1,9 @@
 using LibExpat
 using Base.Test
 
-pd = xp_parse(open(readall, joinpath(splitdir(@__FILE__)[1],"t_s1.txt")))
+const DATADIR = joinpath(dirname(@__FILE__), "data")
+
+pd = xp_parse(open(readall, joinpath(DATADIR,"t_s1.txt")))
 @test isa(pd, ETree)
 println("PASSED 1")
 
@@ -57,7 +59,7 @@ println("PASSED 10")
 ret = find(pd, "/ListBucketResult/Contents[2]/Owner/ID{idk}")
 @test ret == "IDKV2"
 println("PASSED 11")
- 
+
 @test (find(pd, "/ListBucketResult/Contents[2]/Owner/ID{idk}") == find(pd, "Contents[2]/Owner/ID{idk}"))
 println("PASSED 11.1")
 
@@ -70,12 +72,12 @@ println("PASSED 12.1")
 @test (find(pd, "/ListBucketResult/Contents[2]/Owner/JUNK#string") == nothing)
 println("PASSED 12.2")
 
-pd = xp_parse(open(readall, joinpath(splitdir(@__FILE__)[1],"utf8.xml")))
+pd = xp_parse(open(readall, joinpath(DATADIR,"utf8.xml")))
 @test isa(pd, ParsedData)
 println("PASSED 13")
 
 
-pd = xp_parse(open(readall, joinpath(splitdir(@__FILE__)[1],"wiki.xml")))
+pd = xp_parse(open(readall, joinpath(DATADIR,"wiki.xml")))
 @test isa(pd, ParsedData)
 ret = find(pd, "/page/revision/id#string")
 @test ret == "557462847"
@@ -147,7 +149,7 @@ cbs.character_data = function (h, data)
     end
 end
 
-parsefile(joinpath(splitdir(@__FILE__)[1], "graph.graphml"), cbs)
+parsefile(joinpath(DATADIR, "graph.graphml"), cbs)
 
 @test cdata_started
 println("PASSED 16.1")
