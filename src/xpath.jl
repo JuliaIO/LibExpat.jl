@@ -1027,7 +1027,7 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
     elseif op == :startswith
         a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
         b = xpath_string(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any))::String
-        return beginswith(a,b)::Bool
+        return startswith(a,b)::Bool
     elseif op == :name
         if !isempty(args)
             a = xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Vector)::Vector
