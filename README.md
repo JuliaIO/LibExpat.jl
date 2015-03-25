@@ -9,7 +9,7 @@ LibExpat - Julia wrapper for libexpat
 Usage
 =====
 
-XPath queries on fully parsed tree
+XPath queries on a fully parsed tree
 ----------------------------------
 
 Has only three relevant APIs
