@@ -163,7 +163,7 @@ cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 function cdata (p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
 
-    txt = bytestring(s, int(len))
+    txt = bytestring(s, @compat(Int(len)))
     push!(xph.pdata.elements, txt)
 
     @DBG_PRINT ("Found CData : " * txt)
@@ -357,7 +357,7 @@ function find{T<:String}(pd::ETree, path::T)
             end
 
             if m.captures[3] != nothing
-                push!(xp, (:filter, (:number,int(m.captures[3]))))
+                push!(xp, (:filter, (:number, Base.parse(Int, m.captures[3]))))
                 idx = true
             end
         end
