@@ -120,7 +120,7 @@ macro xpath_parse(arg1, arg2)
             end
             $(esc(:parsed)) = Expr(:call, :push!, $(esc(:parsed)), Expr(:tuple,Expr(:quote,$(esc(arg1))),a2))
         else
-            push!($(esc(:parsed))::Vector{(Symbol, Any)}, ($(arg1),$(arg2)))
+            push!($(esc(:parsed))::Vector{@compat(Tuple{Symbol, Any})}, ($(arg1),$(arg2)))
         end
     )
 end
@@ -140,9 +140,9 @@ end
 
 function xpath_parse{T<:String}(xpath::T, k, ismacro)
     if ismacro
-        parsed = :(Array((Symbol, Any), 0))
+        parsed = :(Array(@compat(Tuple{Symbol, Any}), 0))
     else
-        parsed = Array((Symbol, Any), 0)
+        parsed = Array(@compat(Tuple{Symbol, Any}), 0)
     end
     k = consume_whitespace(xpath, k)
     if done(xpath,k)
@@ -320,9 +320,9 @@ function xpath_parse{T<:String}(xpath::T, k, ismacro)
                     #error("xpath return types on either side of | don't appear to match")
                 end
                 if ismacro
-                    parsed = :( push!(Array((Symbol, Any), 0), (:(|), ($(parsed), $(parsed2)))) )
+                    parsed = :( push!(Array(@compat(Tuple{Symbol, Any}), 0), (:(|), ($(parsed), $(parsed2)))) )
                 else
-                    parsed = push!(Array((Symbol, Any), 0), (:(|), (parsed, parsed2)))
+                    parsed = push!(Array(@compat(Tuple{Symbol, Any}), 0), (:(|), (parsed, parsed2)))
                 end
                 return k, parsed, returntype
             elseif c == '['
@@ -405,7 +405,7 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
         c, k2 = next(xpath, k)
     end
     has_fn_last::Bool = false
-    const SA = (Symbol,Any)
+    const SA = @compat(Tuple{Symbol,Any})
     #if ismacro
     #    fn::Expr
     #else
@@ -511,7 +511,7 @@ function xpath_parse_expr{T<:String}(xpath::T, k, precedence::Int, ismacro)
         if ismacro
             fn = fn_::Expr
         else
-            fn = fn_::(Symbol,Any)
+            fn = fn_::@compat(Tuple{Symbol,Any})
         end
     end
     k = consume_whitespace(xpath, k)
@@ -654,9 +654,9 @@ function consume_function(xpath, k, name, ismacro)
     maxargs = fntype[3]::Int
     fnreturntype = fntype[4]::DataType
     if ismacro
-        args = :(Array((Symbol, Any), 0))
+        args = :(Array(@compat(Tuple{Symbol, Any}), 0))
     else
-        args = Array((Symbol, Any), 0)
+        args = Array(@compat(Tuple{Symbol, Any}), 0)
     end
 
     c, k2 = next(xpath,k)
@@ -714,7 +714,7 @@ immutable XPath{T<:String,
     # [(:root,:element), (:descendant_or_self,:node), (:child,:element), (:name,"A")),
     #  (:parent,:element), (:descendant_or_self,:node), (:child,:element), (:filter,(:number,2))]
     # All data strings are expected to be of type T
-    filter::(Symbol,Any)
+    filter::@compat(Tuple{Symbol,Any})
 end
 
 type XPath_Collector
@@ -758,7 +758,7 @@ function xpath_combined_checked(pd1::XPath, pd2::XPath)
         end
         filt = :xpath_any
     end
-    xp = Array((Symbol, Any), 0)
+    xp = Array(@compat(Tuple{Symbol, Any}), 0)
     push!(xp, (:(|),(pd1.filter[2], pd2.filter[2])))
     return (filt, xp)
 end
@@ -842,7 +842,7 @@ function xpath_translate(a::String,b::String,c::String)
     takebuf_string(tr)
 end
 
-function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position::Int, last::Int, output_hint::DataType)
+function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::@compat(Tuple{Symbol,ANY}), position::Int, last::Int, output_hint::DataType)
     op = filter[1]::Symbol
     args = filter[2]
     if op == :attribute
@@ -869,33 +869,33 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
         assert(last >= 0)
         return last
     elseif op == :count
-        result = xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Vector)::Vector
+        result = xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Vector)::Vector
         return length(result)
     elseif op == :not
-        return !(xpath_boolean(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Bool))::Bool)
+        return !(xpath_boolean(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Bool))::Bool)
     elseif op == :true_
         return true
     elseif op == :false_
         return false
     elseif op == :bool
-        return xpath_boolean(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Bool))::Bool
+        return xpath_boolean(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Bool))::Bool
     elseif op == :binop
         op = args[1]::Symbol
         if op == :and
-            a = xpath_boolean(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Bool))::Bool
+            a = xpath_boolean(xpath_expr(pd, xp, args[2]::@compat(Tuple{Symbol,Any}), position, last, Bool))::Bool
             if a
-                return xpath_boolean(xpath_expr(pd, xp, args[3]::(Symbol,Any), position, last, Bool))::Bool
+                return xpath_boolean(xpath_expr(pd, xp, args[3]::@compat(Tuple{Symbol,Any}), position, last, Bool))::Bool
             end
             return false
         elseif op == :or
-            a = xpath_boolean(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Bool))::Bool
+            a = xpath_boolean(xpath_expr(pd, xp, args[2]::@compat(Tuple{Symbol,Any}), position, last, Bool))::Bool
             if a
                 return true
             end
-            return xpath_boolean(xpath_expr(pd, xp, args[3]::(Symbol,Any), position, last, Bool))::Bool
+            return xpath_boolean(xpath_expr(pd, xp, args[3]::@compat(Tuple{Symbol,Any}), position, last, Bool))::Bool
         end
-        a = xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any)
-        b = xpath_expr(pd, xp, args[3]::(Symbol,Any), position, last, Any)
+        a = xpath_expr(pd, xp, args[2]::@compat(Tuple{Symbol,Any}), position, last, Any)
+        b = xpath_expr(pd, xp, args[3]::@compat(Tuple{Symbol,Any}), position, last, Any)
         if op == :(+)
             return xpath_number(a) + xpath_number(b)
         elseif op == :(-)
@@ -985,30 +985,30 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
         end #if
     elseif op == :xpath
         if typeseq(output_hint, Bool)
-            return xpath(pd, :node, xp, args::Vector{(Symbol,Any)}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
+            return xpath(pd, :node, xp, args::Vector{@compat(Tuple{Symbol,Any})}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
         elseif typeseq(output_hint,Vector{ETree}) || typeseq(output_hint,Vector) || typeseq(output_hint,Any)
             out = ETree[]
-            xpath(pd, :node, xp, args::Vector{(Symbol,Any)}, 1, Int[], 1, XPath_Collector(), out)
+            xpath(pd, :node, xp, args::Vector{@compat(Tuple{Symbol,Any})}, 1, Int[], 1, XPath_Collector(), out)
             return out
         else
             assert(false, "unexpected output hint $output_hint")
         end
     elseif op == :xpath_str
         if typeseq(output_hint, Bool)
-            return xpath(pd, :node, xp, args::Vector{(Symbol,Any)}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
+            return xpath(pd, :node, xp, args::Vector{@compat(Tuple{Symbol,Any})}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
         elseif typeseq(output_hint,Vector{String}) || typeseq(output_hint,Vector) || typeseq(output_hint,Any)
             out = String[]
-            xpath(pd, :node, xp, args::Vector{(Symbol,Any)}, 1, Int[], 1, XPath_Collector(), out)
+            xpath(pd, :node, xp, args::Vector{@compat(Tuple{Symbol,Any})}, 1, Int[], 1, XPath_Collector(), out)
             return out
         else
             assert(false)
         end
     elseif op == :xpath_any
         if typeseq(output_hint, Bool)
-            return xpath(pd, :node, xp, args::Vector{(Symbol,Any)}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
+            return xpath(pd, :node, xp, args::Vector{@compat(Tuple{Symbol,Any})}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
         elseif typeseq(output_hint,Vector{Any}) || typeseq(output_hint,Vector) || typeseq(output_hint,Any)
             out = Any[]
-            xpath(pd, :node, xp, args::Vector{(Symbol,Any)}, 1, Int[], 1, XPath_Collector(), out)
+            xpath(pd, :node, xp, args::Vector{@compat(Tuple{Symbol,Any})}, 1, Int[], 1, XPath_Collector(), out)
             return out
         else
             assert(false, "unexpected output hint $output_hint")
@@ -1017,20 +1017,20 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
         if length(args) == 0
             a = xpath_string(pd)::String
         else
-            a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
+            a = xpath_string(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
         end
         return a
     elseif op == :contains
-        a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
-        b = xpath_string(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any))::String
+        a = xpath_string(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
+        b = xpath_string(xpath_expr(pd, xp, args[2]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
         return !(isempty(search(a, b)))::Bool
     elseif op == :startswith
-        a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
-        b = xpath_string(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any))::String
+        a = xpath_string(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
+        b = xpath_string(xpath_expr(pd, xp, args[2]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
         return startswith(a,b)::Bool
     elseif op == :name
         if !isempty(args)
-            a = xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Vector)::Vector
+            a = xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Vector)::Vector
             if isempty(a)
                 return ""
             else
@@ -1042,12 +1042,12 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
     elseif op == :concat
         a = IOBuffer()
         for arg = args
-            write(a, xpath_string(xpath_expr(pd, xp, arg::(Symbol,Any), position, last, Any))::String)
+            write(a, xpath_string(xpath_expr(pd, xp, arg::@compat(Tuple{Symbol,Any}), position, last, Any))::String)
         end
         return takebuf_string(a)::String
     elseif op == :substring_before
-        a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
-        b = xpath_string(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any))::String
+        a = xpath_string(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
+        b = xpath_string(xpath_expr(pd, xp, args[2]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
         i = first(search(a,b))
         if i < 1
             return ""
@@ -1055,8 +1055,8 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
             return a[1:prevind(a,i)]::String
         end
     elseif op == :substring_after
-        a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
-        b = xpath_string(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any))::String
+        a = xpath_string(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
+        b = xpath_string(xpath_expr(pd, xp, args[2]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
         i = last(search(a,b))
         if i < 1
             return ""
@@ -1064,10 +1064,10 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
             return a[nextind(a,i):end]::String
         end
     elseif op == :substring
-        a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
-        b = int(xpath_number(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any)))::Int
+        a = xpath_string(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
+        b = int(xpath_number(xpath_expr(pd, xp, args[2]::@compat(Tuple{Symbol,Any}), position, last, Any)))::Int
         if length(args) > 2
-            c = int(xpath_number(xpath_expr(pd, xp, args[3]::(Symbol,Any), position, last, Any)))::Int
+            c = int(xpath_number(xpath_expr(pd, xp, args[3]::@compat(Tuple{Symbol,Any}), position, last, Any)))::Int
             return a[chr2ind(a,b):chr2ind(a,c)]
         else
             return a[chr2ind(a,b):end]
@@ -1076,41 +1076,41 @@ function xpath_expr{T<:String}(pd, xp::XPath{T}, filter::(Symbol,ANY), position:
         if isempty(args)
             a = xpath_string(pd)::String
         else
-            a = xpath_string((xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any)))::String
+            a = xpath_string((xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any)))::String
         end
         return length(a)::Int
     elseif op == :normalize_space
         if isempty(args)
             a = xpath_string(pd)::String
         else
-            a = xpath_string((xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any)))::String
+            a = xpath_string((xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any)))::String
         end
         return xpath_normalize(a)::String
     elseif op == :translate
-        a = xpath_string(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::String
-        b = xpath_string(xpath_expr(pd, xp, args[2]::(Symbol,Any), position, last, Any))::String
-        c = xpath_string(xpath_expr(pd, xp, args[3]::(Symbol,Any), position, last, Any))::String
+        a = xpath_string(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
+        b = xpath_string(xpath_expr(pd, xp, args[2]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
+        c = xpath_string(xpath_expr(pd, xp, args[3]::@compat(Tuple{Symbol,Any}), position, last, Any))::String
         return xpath_translate(a,b,c)::String
     elseif op == :number_fn
         if isempty(args)
             return xpath_number(pd)::Number
         else
-            return xpath_number(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::Number
+            return xpath_number(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::Number
         end
     elseif op == :sum
         a = 0.0
-        for n in xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Vector)::Vector
+        for n in xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Vector)::Vector
             a += xpath_number(n)
         end
         return a::Float64
     elseif op == :floor
-        a = ifloor(xpath_number(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::Number)
+        a = ifloor(xpath_number(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::Number)
         return a::Int
     elseif op == :ceiling
-        a = iceil(xpath_number(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::Number)
+        a = iceil(xpath_number(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::Number)
         return a::Int
     elseif op == :round
-        a = xpath_number(xpath_expr(pd, xp, args[1]::(Symbol,Any), position, last, Any))::Number
+        a = xpath_number(xpath_expr(pd, xp, args[1]::@compat(Tuple{Symbol,Any}), position, last, Any))::Number
         if -0.5 <= a < -0.0 || a === -0.0
             return -0.0
         else
@@ -1155,7 +1155,7 @@ end
 macro xpath_descendant(node)
     esc( :( iscounted |= xpath_descendant($(node), name::Symbol, xp, filter, index, position, position_index, collector, output) ) )
 end
-function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vector{(Symbol,Any)}, index::Int, position::Vector{Int}, position_index::Int, collector::XPath_Collector, output)
+function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vector{@compat(Tuple{Symbol,Any})}, index::Int, position::Vector{Int}, position_index::Int, collector::XPath_Collector, output)
     #return value is whether the node is "true" for the input to a boolean function
     #implements axes: child, descendant, parent, ancestor, self, root, descendant-or-self, ancestor-or-self
     #implements filters: name
@@ -1193,7 +1193,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
             position[position_index] += 1
         end
         p = position[position_index]
-        bool = xpath_expr(pd, xp, name::(Symbol,Any), p, -1, Bool)
+        bool = xpath_expr(pd, xp, name::@compat(Tuple{Symbol,Any}), p, -1, Bool)
         if isa(bool, Int)
             iscounted = bool::Int == p
         elseif isa(bool, Float64)
@@ -1214,7 +1214,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
         if collector.filter === nothing
             assert(collector.index == 0)
             collector.nodes = ETree[]
-            collector.filter = name::(Symbol,Any)
+            collector.filter = name::@compat(Tuple{Symbol,Any})
             collector.index = index
         else
             assert(collector.filter === name)
@@ -1224,7 +1224,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
         iscounted = false
 
     elseif axis == :attribute
-        attrs = xpath_expr(pd, xp, filter[index-1]::(Symbol,Any), -1, -1, Vector{String})::Vector{String}
+        attrs = xpath_expr(pd, xp, filter[index-1]::@compat(Tuple{Symbol,Any}), -1, -1, Vector{String})::Vector{String}
         name = :node
         @xpath attrs
 
@@ -1237,8 +1237,8 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
         end
 
     elseif axis == :(|)
-        filter1 = name[1]::Vector{(Symbol,Any)}
-        filter2 = name[2]::Vector{(Symbol,Any)}
+        filter1 = name[1]::Vector{@compat(Tuple{Symbol,Any})}
+        filter2 = name[2]::Vector{@compat(Tuple{Symbol,Any})}
         index = 1
         name = :node
         filter = filter1
@@ -1310,7 +1310,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
         end
         while collector.filter !== nothing
             nodes = collector.nodes
-            collector_filter = collector.filter::(Symbol,Any)
+            collector_filter = collector.filter::@compat(Tuple{Symbol,Any})
             index = collector.index
             name = :node
             collector.filter = nothing
@@ -1334,7 +1334,7 @@ function xpath{T<:String}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vec
     return iscounted
 end
 
-function xpath_descendant(pd::ETree, name::Symbol, xp::XPath, filter::Vector{(Symbol,Any)}, index::Int, position::Vector{Int}, position_index::Int, collector::XPath_Collector, output)
+function xpath_descendant(pd::ETree, name::Symbol, xp::XPath, filter::Vector{@compat(Tuple{Symbol,Any})}, index::Int, position::Vector{Int}, position_index::Int, collector::XPath_Collector, output)
     iscounted = false
     for child in pd.elements
         if name::Symbol == :node
