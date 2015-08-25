@@ -6,7 +6,7 @@ const DATADIR = joinpath(dirname(@__FILE__), "data")
 pd = xp_parse(open(readall, joinpath(DATADIR,"t_s1.txt")))
 @test isa(pd, ETree)
 println("PASSED 1")
-println(methods(find))
+
 ret = find(pd, "/ListBucketResult")
 @test isa(ret, Array)
 @test length(ret) == 1
