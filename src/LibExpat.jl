@@ -17,7 +17,7 @@ export ParsedData # deprecated
 
 DEBUG = false
 
-macro DBG_PRINT (s)
+macro DBG_PRINT(s)
     quote
         if (DEBUG)
             println($s);
@@ -114,7 +114,7 @@ function xp_make_parser(sep='\0')
 end
 
 
-function xp_geterror (p::Union(XML_Parser,Nothing))
+function xp_geterror(p::Union(XML_Parser,Nothing))
     ec = XML_GetErrorCode(p)
 
     if ec != 0
@@ -137,13 +137,13 @@ function xp_geterror(xph::XPHandle)
 end
 
 
-function xp_close (xph::XPHandle)
+function xp_close(xph::XPHandle)
   if (xph.parser != nothing)    XML_ParserFree(xph.parser) end
   xph.parser = nothing
 end
 
 
-function start_cdata (p_xph::Ptr{Void})
+function start_cdata(p_xph::Ptr{Void})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     @DBG_PRINT ("Found StartCdata")
     xph.in_cdata = true
@@ -151,7 +151,7 @@ function start_cdata (p_xph::Ptr{Void})
 end
 cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
 
-function end_cdata (p_xph::Ptr{Void})
+function end_cdata(p_xph::Ptr{Void})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     @DBG_PRINT ("Found EndCdata")
     xph.in_cdata = false
@@ -160,7 +160,7 @@ end
 cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 
 
-function cdata (p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
+function cdata(p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
 
     txt = bytestring(s, @compat(Int(len)))
@@ -172,7 +172,7 @@ end
 cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{Uint8}, Cint))
 
 
-function comment (p_xph::Ptr{Void}, data::Ptr{Uint8})
+function comment(p_xph::Ptr{Void}, data::Ptr{Uint8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
     @DBG_PRINT ("Found comment : " * txt)
@@ -181,7 +181,7 @@ end
 cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{Uint8}))
 
 
-function default (p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
+function default(p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
     @DBG_PRINT ("Default : " * txt)
@@ -190,7 +190,7 @@ end
 cb_default = cfunction(default, Void, (Ptr{Void},Ptr{Uint8}, Cint))
 
 
-function default_expand (p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
+function default_expand(p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
     @DBG_PRINT ("Default Expand : " * txt)
@@ -225,7 +225,7 @@ function attrs_in_to_dict(attrs_in::Ptr{Ptr{Uint8}})
     return attrs
 end
 
-function start_element (p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
+function start_element(p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     name = bytestring(name)
     @DBG_PRINT ("Start Elem name : $name,  current element: $(xph.pdata.name) ")
@@ -244,7 +244,7 @@ end
 cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Ptr{Uint8}}))
 
 
-function end_element (p_xph::Ptr{Void}, name::Ptr{Uint8})
+function end_element(p_xph::Ptr{Void}, name::Ptr{Uint8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(name)
     @DBG_PRINT ("End element: $txt, current element: $(xph.pdata.name) ")
@@ -256,7 +256,7 @@ end
 cb_end_element = cfunction(end_element, Void, (Ptr{Void},Ptr{Uint8}))
 
 
-function start_namespace (p_xph::Ptr{Void}, prefix::Ptr{Uint8}, uri::Ptr{Uint8})
+function start_namespace(p_xph::Ptr{Void}, prefix::Ptr{Uint8}, uri::Ptr{Uint8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = bytestring(prefix)
     uri = bytestring(uri)
@@ -266,7 +266,7 @@ end
 cb_start_namespace = cfunction(start_namespace, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Uint8}))
 
 
-function end_namespace (p_xph::Ptr{Void}, prefix::Ptr{Uint8})
+function end_namespace(p_xph::Ptr{Void}, prefix::Ptr{Uint8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = bytestring(prefix)
     @DBG_PRINT ("end namespace prefix : $prefix")
