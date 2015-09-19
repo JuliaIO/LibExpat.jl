@@ -17,7 +17,7 @@ export ParsedData # deprecated
 
 DEBUG = false
 
-macro DBG_PRINT (s)
+macro DBG_PRINT(s)
     quote
         if (DEBUG)
             println($s);
