@@ -31,7 +31,7 @@ type ETree
     # Dict of tag attributes as name-value pairs
     attr::Dict{String,String}
     # List of child elements.
-    elements::Vector{Union(ETree,String)}
+    elements::Vector{@compat(Union{ETree,String})}
     parent::ETree
 
     ETree() = ETree("")
@@ -39,7 +39,7 @@ type ETree
         pd=new(
             name,
             Dict{String, String}(),
-            Union(ETree,String)[])
+            @compat(Union{ETree,String})[])
         pd.parent=pd
         pd
     end
@@ -80,7 +80,7 @@ end
 
 
 type XPHandle
-  parser::Union(XML_Parser,Nothing)
+  parser::@compat(Union{XML_Parser,Nothing})
   pdata::ETree
   in_cdata::Bool
 
@@ -114,7 +114,7 @@ function xp_make_parser(sep='\0')
 end
 
 
-function xp_geterror(p::Union(XML_Parser,Nothing))
+function xp_geterror(p::@compat(Union{XML_Parser,Nothing}))
     ec = XML_GetErrorCode(p)
 
     if ec != 0

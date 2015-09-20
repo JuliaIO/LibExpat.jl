@@ -701,14 +701,14 @@ end
 isroot(pd::ETree) = (pd.parent == pd)
 
 immutable XPath{T<:String,
-                returntype <: Union(Vector{ETree},
+                returntype <: @compat(Union{Vector{ETree},
                       Vector{String},
                       Vector{Any},
                       Bool,
                       Number,
                       Int,
                       String,
-                      Any)}
+                      Any})}
     # an XPath filter is a series of XPath segments implemented as
     # (:cmd, data) pairs. For example,
     # "//A/..//*[2]" should be parsed as:
@@ -764,14 +764,14 @@ function xpath_combined_checked(pd1::XPath, pd2::XPath)
     return (filt, xp)
 end
 Base.|{T,S}(pd1::XPath{T}, pd2::XPath{S}) =
-    XPath{Union(T,S),Any}( xpath_combined_checked(pd1,pd2) )
+    XPath{@compat(Union{T,S}),Any}( xpath_combined_checked(pd1,pd2) )
 Base.|{T,S,ret1<:Vector,ret2<:Vector}(pd1::XPath{T,ret1}, pd2::XPath{S,ret2}) =
-    XPath{Union(T,S),Vector{Any}}( xpath_combined_checked(pd1,pd2) )
+    XPath{@compat(Union{T,S}),Vector{Any}}( xpath_combined_checked(pd1,pd2) )
 Base.|{T,S,ret<:Vector}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
-    XPath{Union(T,S),ret}( xpath_combined_checked(pd1,pd2) )
+    XPath{@compat(Union{T,S}),ret}( xpath_combined_checked(pd1,pd2) )
 Base.|{T,S,ret}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
-    XPath{Union(T,S),ret}( xpath_combined_checked(pd1,pd2) )
-#Base.(:*){T,S,ret}(pd::XPath{T,ret}, filters::S) = XPath{Union(T,S),ret}( ??? )
+    XPath{@compat(Union{T,S}),ret}( xpath_combined_checked(pd1,pd2) )
+#Base.(:*){T,S,ret}(pd::XPath{T,ret}, filters::S) = XPath{@compat(Union{T,S}),ret}( ??? )
 
 
 xpath_boolean(a::Bool) = a
@@ -1359,4 +1359,3 @@ getindex(pd::ETree,x::String) = xpath(pd,x)
 getindex(pd::ETree,x::XPath) = xpath(pd,x)
 getindex(pd::Vector{ETree},x::String) = xpath(pd, x)
 getindex(pd::Vector{ETree},x::XPath) = xpath(pd, x)
-
