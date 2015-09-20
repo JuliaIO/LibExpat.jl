@@ -14,14 +14,14 @@ type XPCallbacks
     function XPCallbacks()
         start_cdata = (handler::XPStreamHandler) -> nothing
         end_cdata = (handler::XPStreamHandler) -> nothing
-        comment = (handler::XPStreamHandler, txt::String) -> nothing
-        character_data = (handler::XPStreamHandler, txt::String) -> nothing
-        default = (handler::XPStreamHandler, txt::String) -> nothing
-        default_expand = (handler::XPStreamHandler, txt::String) -> nothing
-        start_element = (handler::XPStreamHandler, name::String, attrs_in::Dict{String,String}) -> nothing
-        end_element = (handler::XPStreamHandler, name::String) -> nothing
-        start_namespace = (handler::XPStreamHandler, prefix::String, uri::String) -> nothing
-        end_namespace = (handler::XPStreamHandler, prefix::String) -> nothing
+        comment = (handler::XPStreamHandler, txt::AbstractString) -> nothing
+        character_data = (handler::XPStreamHandler, txt::AbstractString) -> nothing
+        default = (handler::XPStreamHandler, txt::AbstractString) -> nothing
+        default_expand = (handler::XPStreamHandler, txt::AbstractString) -> nothing
+        start_element = (handler::XPStreamHandler, name::AbstractString, attrs_in::Dict{AbstractString,AbstractString}) -> nothing
+        end_element = (handler::XPStreamHandler, name::AbstractString) -> nothing
+        start_namespace = (handler::XPStreamHandler, prefix::AbstractString, uri::AbstractString) -> nothing
+        end_namespace = (handler::XPStreamHandler, prefix::AbstractString) -> nothing
 
         new(start_cdata, end_cdata, comment, character_data, default,
             default_expand, start_element, end_element, start_namespace,
@@ -37,8 +37,8 @@ type XPStreamHandler{D}
 end
 
 
-function streaming_start_cdata (p_cbs::Ptr{Void})
-    @DBG_PRINT ("Found StartCdata")
+function streaming_start_cdata(p_cbs::Ptr{Void})
+    @DBG_PRINT("Found StartCdata")
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
     h.cbs.start_cdata(h)
@@ -47,8 +47,8 @@ end
 cb_streaming_start_cdata = cfunction(streaming_start_cdata, Void, (Ptr{Void},))
 
 
-function streaming_end_cdata (p_cbs::Ptr{Void})
-    @DBG_PRINT ("Found EndCdata")
+function streaming_end_cdata(p_cbs::Ptr{Void})
+    @DBG_PRINT("Found EndCdata")
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
     h.cbs.end_cdata(h)
@@ -57,101 +57,101 @@ end
 cb_streaming_end_cdata = cfunction(streaming_end_cdata, Void, (Ptr{Void},))
 
 
-function streaming_cdata (p_cbs::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
+function streaming_cdata(p_cbs::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
     txt = bytestring(s, @compat(Int(len)))
 
-    @DBG_PRINT ("Found CData : " * txt)
+    @DBG_PRINT("Found CData : " * txt)
     h.cbs.character_data(h, txt)
 
     return;
 end
-cb_streaming_cdata = cfunction(streaming_cdata, Void, (Ptr{Void},Ptr{Uint8}, Cint))
+cb_streaming_cdata = cfunction(streaming_cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
-function streaming_start_element(p_cbs::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
+function streaming_start_element(p_cbs::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
-    txt::String = bytestring(name)
-    attrs::Dict{String,String} = attrs_in_to_dict(attrs_in)
+    txt::AbstractString = bytestring(name)
+    attrs::Dict{AbstractString,AbstractString} = attrs_in_to_dict(attrs_in)
 
     h.cbs.start_element(h, txt, attrs)
 
     return
 end
-cb_streaming_start_element = cfunction(streaming_start_element, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Ptr{Uint8}}))
+cb_streaming_start_element = cfunction(streaming_start_element, Void, (Ptr{Void},Ptr{UInt8}, Ptr{Ptr{UInt8}}))
 
 
-function streaming_end_element(p_h::Ptr{Void}, name::Ptr{Uint8})
+function streaming_end_element(p_h::Ptr{Void}, name::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
-    txt::String = bytestring(name)
-    @DBG_PRINT ("End element: $txt, current element: $(xph.pdata.name) ")
+    txt::AbstractString = bytestring(name)
+    @DBG_PRINT("End element: $txt, current element: $(xph.pdata.name) ")
 
     h.cbs.end_element(h, txt)
 
     return
 end
-cb_streaming_end_element = cfunction(streaming_end_element, Void, (Ptr{Void},Ptr{Uint8}))
+cb_streaming_end_element = cfunction(streaming_end_element, Void, (Ptr{Void},Ptr{UInt8}))
 
-function streaming_comment (p_h::Ptr{Void}, data::Ptr{Uint8})
+function streaming_comment(p_h::Ptr{Void}, data::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = bytestring(data)
-    @DBG_PRINT ("Found comment : " * txt)
+    @DBG_PRINT("Found comment : " * txt)
 
     h.cbs.comment(h, txt)
 
     return
 end
-cb_streaming_comment = cfunction(streaming_comment, Void, (Ptr{Void},Ptr{Uint8}))
+cb_streaming_comment = cfunction(streaming_comment, Void, (Ptr{Void},Ptr{UInt8}))
 
 
-function streaming_default (p_h::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
+function streaming_default(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = bytestring(data)
-    @DBG_PRINT ("Default : " * txt)
+    @DBG_PRINT("Default : " * txt)
 
     h.cbs.default(h, txt)
 
     return;
 end
-cb_streaming_default = cfunction(streaming_default, Void, (Ptr{Void},Ptr{Uint8}, Cint))
+cb_streaming_default = cfunction(streaming_default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
-function streaming_default_expand (p_h::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
+function streaming_default_expand(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = bytestring(data)
-    @DBG_PRINT ("Default Expand : " * txt)
+    @DBG_PRINT("Default Expand : " * txt)
 
     h.cbs.default_expand(h, txt)
 
     return;
 end
-cb_streaming_default_expand = cfunction(streaming_default_expand, Void, (Ptr{Void},Ptr{Uint8}, Cint))
+cb_streaming_default_expand = cfunction(streaming_default_expand, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
-function streaming_start_namespace (p_h::Ptr{Void}, prefix::Ptr{Uint8}, uri::Ptr{Uint8})
+function streaming_start_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     prefix = bytestring(prefix)
     uri = bytestring(uri)
-    @DBG_PRINT ("start namespace prefix : $prefix, uri: $uri")
+    @DBG_PRINT("start namespace prefix : $prefix, uri: $uri")
 
     h.cbs.start_namespace(h, prefix, uri)
 
     return;
 end
-cb_streaming_start_namespace = cfunction(streaming_start_namespace, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Uint8}))
+cb_streaming_start_namespace = cfunction(streaming_start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr{UInt8}))
 
 
-function streaming_end_namespace (p_h::Ptr{Void}, prefix::Ptr{Uint8})
+function streaming_end_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     prefix = bytestring(prefix)
-    @DBG_PRINT ("end namespace prefix : $prefix")
+    @DBG_PRINT("end namespace prefix : $prefix")
 
     h.cbs.end_namespace(h, prefix)
 
     return;
 end
-cb_streaming_end_namespace = cfunction(streaming_end_namespace, Void, (Ptr{Void},Ptr{Uint8}))
+cb_streaming_end_namespace = cfunction(streaming_end_namespace, Void, (Ptr{Void},Ptr{UInt8}))
 
 
 # Unsupported callbacks: External Entity, NotationDecl, Not Stand Alone, Processing, UnparsedEntityDecl, StartDocType
@@ -204,7 +204,7 @@ function free(h::XPStreamHandler)
     XML_ParserFree(h.parser)
 end
 
-function parsefile(filename::String,callbacks::XPCallbacks; bufferlines=1024, data=nothing)
+function parsefile(filename::AbstractString,callbacks::XPCallbacks; bufferlines=1024, data=nothing)
     h = make_parser(callbacks, data)
     # TODO: Support suspending for files too
     suspended = false
@@ -240,7 +240,7 @@ function parsefile(filename::String,callbacks::XPCallbacks; bufferlines=1024, da
     catch e
         stre = string(e)
         (err, line, column, pos) = xp_geterror(h.parser)
-        @DBG_PRINT ("$e, $err, $line, $column, $pos")
+        @DBG_PRINT("$e, $err, $line, $column, $pos")
         rethrow("$e, $err, $line, $column, $pos")
     finally
         if !suspended
@@ -250,7 +250,7 @@ function parsefile(filename::String,callbacks::XPCallbacks; bufferlines=1024, da
     end
 end
 
-function parse(txt::String,callbacks::XPCallbacks; data=nothing)
+function parse(txt::AbstractString,callbacks::XPCallbacks; data=nothing)
     h = make_parser(callbacks, data)
     suspended = false
 
@@ -267,7 +267,7 @@ function parse(txt::String,callbacks::XPCallbacks; data=nothing)
     catch e
         stre = string(e)
         (err, line, column, pos) = xp_geterror(h.parser)
-        @DBG_PRINT ("$e, $err, $line, $column, $pos")
+        @DBG_PRINT("$e, $err, $line, $column, $pos")
         rethrow("$e, $err, $line, $column, $pos")
 
     finally

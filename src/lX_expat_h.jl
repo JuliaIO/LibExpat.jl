@@ -43,7 +43,7 @@
 @c Ptr{XML_Char} XML_GetBase (XML_Parser,) libexpat
 @c Int32 XML_GetSpecifiedAttributeCount (XML_Parser,) libexpat
 @c Int32 XML_GetIdAttributeIndex (XML_Parser,) libexpat
-@c Int32 XML_Parse (XML_Parser, Ptr{Uint8}, Int32, Int32) libexpat
+@c Int32 XML_Parse (XML_Parser, Ptr{UInt8}, Int32, Int32) libexpat
 @c Ptr{Void} XML_GetBuffer (XML_Parser, Int32) libexpat
 @c Int32 XML_ParseBuffer (XML_Parser, Int32, Int32) libexpat
 @c Int32 XML_StopParser (XML_Parser, XML_Bool) libexpat
@@ -51,13 +51,13 @@
 @c None XML_GetParsingStatus (XML_Parser, Ptr{XML_ParsingStatus}) libexpat
 @c XML_Parser XML_ExternalEntityParserCreate (XML_Parser, Ptr{XML_Char}, Ptr{XML_Char}) libexpat
 @c Int32 XML_SetParamEntityParsing (XML_Parser, Void) libexpat
-@c Int32 XML_SetHashSalt (XML_Parser, Uint32) libexpat
+@c Int32 XML_SetHashSalt (XML_Parser, UInt32) libexpat
 @c Int32 XML_GetErrorCode (XML_Parser,) libexpat
 @c XML_Size XML_GetCurrentLineNumber (XML_Parser,) libexpat
 @c XML_Size XML_GetCurrentColumnNumber (XML_Parser,) libexpat
 @c XML_Index XML_GetCurrentByteIndex (XML_Parser,) libexpat
 @c Int32 XML_GetCurrentByteCount (XML_Parser,) libexpat
-@c Ptr{Uint8} XML_GetInputContext (XML_Parser, Ptr{Int32}, Ptr{Int32}) libexpat
+@c Ptr{UInt8} XML_GetInputContext (XML_Parser, Ptr{Int32}, Ptr{Int32}) libexpat
 @c None XML_FreeContentModel (XML_Parser, Ptr{XML_Content}) libexpat
 @c Ptr{Void} XML_MemMalloc (XML_Parser, size_t) libexpat
 @c Ptr{Void} XML_MemRealloc (XML_Parser, Ptr{Void}, size_t) libexpat
