@@ -1,7 +1,7 @@
 module LibExpat
 
 using Compat
-import Base: getindex, show, find, parse
+import Base: getindex, show, parse
 
 @windows_only const libexpat = "libexpat-1"
 @unix_only const libexpat = "libexpat"
@@ -12,7 +12,7 @@ include("lX_expat_h.jl")
 
 @c Ptr{XML_LChar} XML_ErrorString (Cint,) libexpat
 
-export ETree, xp_parse, find, xpath, @xpath_str
+export ETree, xp_parse, xpath, @xpath_str
 export ParsedData # deprecated
 
 DEBUG = false
