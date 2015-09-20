@@ -57,7 +57,7 @@ end
 cb_streaming_end_cdata = cfunction(streaming_end_cdata, Void, (Ptr{Void},))
 
 
-function streaming_cdata(p_cbs::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
+function streaming_cdata(p_cbs::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
     txt = bytestring(s, @compat(Int(len)))
@@ -67,10 +67,10 @@ function streaming_cdata(p_cbs::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
 
     return;
 end
-cb_streaming_cdata = cfunction(streaming_cdata, Void, (Ptr{Void},Ptr{Uint8}, Cint))
+cb_streaming_cdata = cfunction(streaming_cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
-function streaming_start_element(p_cbs::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
+function streaming_start_element(p_cbs::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
     txt::String = bytestring(name)
     attrs::Dict{String,String} = attrs_in_to_dict(attrs_in)
@@ -79,10 +79,10 @@ function streaming_start_element(p_cbs::Ptr{Void}, name::Ptr{Uint8}, attrs_in::P
 
     return
 end
-cb_streaming_start_element = cfunction(streaming_start_element, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Ptr{Uint8}}))
+cb_streaming_start_element = cfunction(streaming_start_element, Void, (Ptr{Void},Ptr{UInt8}, Ptr{Ptr{UInt8}}))
 
 
-function streaming_end_element(p_h::Ptr{Void}, name::Ptr{Uint8})
+function streaming_end_element(p_h::Ptr{Void}, name::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt::String = bytestring(name)
     @DBG_PRINT("End element: $txt, current element: $(xph.pdata.name) ")
@@ -91,9 +91,9 @@ function streaming_end_element(p_h::Ptr{Void}, name::Ptr{Uint8})
 
     return
 end
-cb_streaming_end_element = cfunction(streaming_end_element, Void, (Ptr{Void},Ptr{Uint8}))
+cb_streaming_end_element = cfunction(streaming_end_element, Void, (Ptr{Void},Ptr{UInt8}))
 
-function streaming_comment(p_h::Ptr{Void}, data::Ptr{Uint8})
+function streaming_comment(p_h::Ptr{Void}, data::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = bytestring(data)
     @DBG_PRINT("Found comment : " * txt)
@@ -102,10 +102,10 @@ function streaming_comment(p_h::Ptr{Void}, data::Ptr{Uint8})
 
     return
 end
-cb_streaming_comment = cfunction(streaming_comment, Void, (Ptr{Void},Ptr{Uint8}))
+cb_streaming_comment = cfunction(streaming_comment, Void, (Ptr{Void},Ptr{UInt8}))
 
 
-function streaming_default(p_h::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
+function streaming_default(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = bytestring(data)
     @DBG_PRINT("Default : " * txt)
@@ -114,10 +114,10 @@ function streaming_default(p_h::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
 
     return;
 end
-cb_streaming_default = cfunction(streaming_default, Void, (Ptr{Void},Ptr{Uint8}, Cint))
+cb_streaming_default = cfunction(streaming_default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
-function streaming_default_expand(p_h::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
+function streaming_default_expand(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = bytestring(data)
     @DBG_PRINT("Default Expand : " * txt)
@@ -126,10 +126,10 @@ function streaming_default_expand(p_h::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
 
     return;
 end
-cb_streaming_default_expand = cfunction(streaming_default_expand, Void, (Ptr{Void},Ptr{Uint8}, Cint))
+cb_streaming_default_expand = cfunction(streaming_default_expand, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
-function streaming_start_namespace(p_h::Ptr{Void}, prefix::Ptr{Uint8}, uri::Ptr{Uint8})
+function streaming_start_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     prefix = bytestring(prefix)
     uri = bytestring(uri)
@@ -139,10 +139,10 @@ function streaming_start_namespace(p_h::Ptr{Void}, prefix::Ptr{Uint8}, uri::Ptr{
 
     return;
 end
-cb_streaming_start_namespace = cfunction(streaming_start_namespace, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Uint8}))
+cb_streaming_start_namespace = cfunction(streaming_start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr{UInt8}))
 
 
-function streaming_end_namespace(p_h::Ptr{Void}, prefix::Ptr{Uint8})
+function streaming_end_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     prefix = bytestring(prefix)
     @DBG_PRINT("end namespace prefix : $prefix")
@@ -151,7 +151,7 @@ function streaming_end_namespace(p_h::Ptr{Void}, prefix::Ptr{Uint8})
 
     return;
 end
-cb_streaming_end_namespace = cfunction(streaming_end_namespace, Void, (Ptr{Void},Ptr{Uint8}))
+cb_streaming_end_namespace = cfunction(streaming_end_namespace, Void, (Ptr{Void},Ptr{UInt8}))
 
 
 # Unsupported callbacks: External Entity, NotationDecl, Not Stand Alone, Processing, UnparsedEntityDecl, StartDocType

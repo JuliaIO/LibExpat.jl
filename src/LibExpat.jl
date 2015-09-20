@@ -160,7 +160,7 @@ end
 cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 
 
-function cdata(p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
+function cdata(p_xph::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
 
     txt = bytestring(s, @compat(Int(len)))
@@ -169,36 +169,36 @@ function cdata(p_xph::Ptr{Void}, s::Ptr{Uint8}, len::Cint)
     @DBG_PRINT("Found CData : " * txt)
     return;
 end
-cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{Uint8}, Cint))
+cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
-function comment(p_xph::Ptr{Void}, data::Ptr{Uint8})
+function comment(p_xph::Ptr{Void}, data::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
     @DBG_PRINT("Found comment : " * txt)
     return;
 end
-cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{Uint8}))
+cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{UInt8}))
 
 
-function default(p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
+function default(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
     @DBG_PRINT("Default : " * txt)
     return;
 end
-cb_default = cfunction(default, Void, (Ptr{Void},Ptr{Uint8}, Cint))
+cb_default = cfunction(default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
-function default_expand(p_xph::Ptr{Void}, data::Ptr{Uint8}, len::Cint)
+function default_expand(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(data)
     @DBG_PRINT("Default Expand : " * txt)
     return;
 end
-cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{Uint8}, Cint))
+cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
-function attrs_in_to_dict(attrs_in::Ptr{Ptr{Uint8}})
+function attrs_in_to_dict(attrs_in::Ptr{Ptr{UInt8}})
     attrs = Dict{String,String}()
 
     if (attrs_in != C_NULL)
@@ -225,7 +225,7 @@ function attrs_in_to_dict(attrs_in::Ptr{Ptr{Uint8}})
     return attrs
 end
 
-function start_element(p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uint8}})
+function start_element(p_xph::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     name = bytestring(name)
     @DBG_PRINT("Start Elem name : $name,  current element: $(xph.pdata.name) ")
@@ -241,10 +241,10 @@ function start_element(p_xph::Ptr{Void}, name::Ptr{Uint8}, attrs_in::Ptr{Ptr{Uin
 
     return
 end
-cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Ptr{Uint8}}))
+cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{UInt8}, Ptr{Ptr{UInt8}}))
 
 
-function end_element(p_xph::Ptr{Void}, name::Ptr{Uint8})
+function end_element(p_xph::Ptr{Void}, name::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = bytestring(name)
     @DBG_PRINT("End element: $txt, current element: $(xph.pdata.name) ")
@@ -253,26 +253,26 @@ function end_element(p_xph::Ptr{Void}, name::Ptr{Uint8})
 
     return;
 end
-cb_end_element = cfunction(end_element, Void, (Ptr{Void},Ptr{Uint8}))
+cb_end_element = cfunction(end_element, Void, (Ptr{Void},Ptr{UInt8}))
 
 
-function start_namespace(p_xph::Ptr{Void}, prefix::Ptr{Uint8}, uri::Ptr{Uint8})
+function start_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = bytestring(prefix)
     uri = bytestring(uri)
     @DBG_PRINT("start namespace prefix : $prefix, uri: $uri")
     return;
 end
-cb_start_namespace = cfunction(start_namespace, Void, (Ptr{Void},Ptr{Uint8}, Ptr{Uint8}))
+cb_start_namespace = cfunction(start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr{UInt8}))
 
 
-function end_namespace(p_xph::Ptr{Void}, prefix::Ptr{Uint8})
+function end_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = bytestring(prefix)
     @DBG_PRINT("end namespace prefix : $prefix")
     return;
 end
-cb_end_namespace = cfunction(end_namespace, Void, (Ptr{Void},Ptr{Uint8}))
+cb_end_namespace = cfunction(end_namespace, Void, (Ptr{Void},Ptr{UInt8}))
 
 
 # Unsupported callbacks: External Entity, NotationDecl, Not Stand Alone, Processing, UnparsedEntityDecl, StartDocType

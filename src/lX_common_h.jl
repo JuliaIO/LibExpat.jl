@@ -11,12 +11,12 @@ macro ctypedef(fake_t,real_t)
   end
 end
 
-@ctypedef XML_Char Uint8
-@ctypedef XML_LChar Uint8
+@ctypedef XML_Char UInt8
+@ctypedef XML_LChar UInt8
 @ctypedef XML_Index Int32
-@ctypedef XML_Size Uint32
+@ctypedef XML_Size UInt32
 @ctypedef XML_Parser Ptr{Void}
-@ctypedef XML_Bool Uint8
+@ctypedef XML_Bool UInt8
 # enum XML_Status
 const XML_STATUS_ERROR = 0
 const XML_STATUS_OK = 1
