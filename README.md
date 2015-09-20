@@ -16,7 +16,7 @@ Has only three relevant APIs
 
 - ```xp_parse(s::String)``` returns a parsed object of type ```ETree``` (used to be called ```ParsedData```).
 
-- ```find(pd::ETree, element_path::String)``` is used to search for elements within the parsed data object as returned by ```xp_parse```
+- ```LibExpat.find(pd::ETree, element_path::String)``` is used to search for elements within the parsed data object as returned by ```xp_parse```
 
 - ```(pd::ETree)[xpath::String]``` or ```xpath(pd::ETree, xpath::String)``` is also used to search for elements within the parsed
 data object as returned by ```xp_parse```, but using a subset of the xpath specification
@@ -50,7 +50,7 @@ If only one sub-element exists, the index is assumed to be 1 and may be omitted.
 - If ```element_path``` does NOT start with a ```/``` then the search starts with the children of the root pd (the first argument)
 
 
-You can also navigate the returned ETree object directly, i.e., without using ```find```.
+You can also navigate the returned ETree object directly, i.e., without using ```LibExpat.find```.
 The relevant members of ETree are:
 
 ```
@@ -103,4 +103,3 @@ If your data is too large to fit into memory, as an alternative you can use `xp_
 IJulia Demonstration Notebook
 =============================
 [LibExpat IJulia Demo ](http://nbviewer.ipython.org/urls/raw.github.com/amitmurthy/LibExpat.jl/master/libexpat_test.ipynb)
-
