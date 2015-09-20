@@ -27,19 +27,19 @@ end
 
 type ETree
     # XML Tag
-    name::String
+    name::AbstractString
     # Dict of tag attributes as name-value pairs
-    attr::Dict{String,String}
+    attr::Dict{AbstractString,AbstractString}
     # List of child elements.
-    elements::Vector{@compat(Union{ETree,String})}
+    elements::Vector{@compat(Union{ETree,AbstractString})}
     parent::ETree
 
     ETree() = ETree("")
     function ETree(name)
         pd=new(
             name,
-            Dict{String, String}(),
-            @compat(Union{ETree,String})[])
+            Dict{AbstractString, AbstractString}(),
+            @compat(Union{ETree,AbstractString})[])
         pd.parent=pd
         pd
     end
@@ -69,8 +69,8 @@ end
 string_value(pd::ETree) = takebuf_string(string_value(pd,IOBuffer()))
 function string_value(pd::ETree, str::IOBuffer)
     for node in pd.elements
-        if isa(node, String)
-            write(str, node::String)
+        if isa(node, AbstractString)
+            write(str, node::AbstractString)
         elseif isa(node,ETree)
             string_value(node::ETree, str)
         end
@@ -199,7 +199,7 @@ end
 cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 function attrs_in_to_dict(attrs_in::Ptr{Ptr{UInt8}})
-    attrs = Dict{String,String}()
+    attrs = Dict{AbstractString,AbstractString}()
 
     if (attrs_in != C_NULL)
         i = 1
@@ -280,7 +280,7 @@ cb_end_namespace = cfunction(end_namespace, Void, (Ptr{Void},Ptr{UInt8}))
 
 
 
-function xp_parse(txt::String)
+function xp_parse(txt::AbstractString)
     xph = nothing
     xph = xp_make_parser()
 
@@ -302,7 +302,7 @@ function xp_parse(txt::String)
 end
 
 
-function find{T<:String}(pd::ETree, path::T)
+function find{T<:AbstractString}(pd::ETree, path::T)
     # What are we looking for?
     what = :node
     attr = ""

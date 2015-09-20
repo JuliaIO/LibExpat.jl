@@ -14,14 +14,14 @@ type XPCallbacks
     function XPCallbacks()
         start_cdata = (handler::XPStreamHandler) -> nothing
         end_cdata = (handler::XPStreamHandler) -> nothing
-        comment = (handler::XPStreamHandler, txt::String) -> nothing
-        character_data = (handler::XPStreamHandler, txt::String) -> nothing
-        default = (handler::XPStreamHandler, txt::String) -> nothing
-        default_expand = (handler::XPStreamHandler, txt::String) -> nothing
-        start_element = (handler::XPStreamHandler, name::String, attrs_in::Dict{String,String}) -> nothing
-        end_element = (handler::XPStreamHandler, name::String) -> nothing
-        start_namespace = (handler::XPStreamHandler, prefix::String, uri::String) -> nothing
-        end_namespace = (handler::XPStreamHandler, prefix::String) -> nothing
+        comment = (handler::XPStreamHandler, txt::AbstractString) -> nothing
+        character_data = (handler::XPStreamHandler, txt::AbstractString) -> nothing
+        default = (handler::XPStreamHandler, txt::AbstractString) -> nothing
+        default_expand = (handler::XPStreamHandler, txt::AbstractString) -> nothing
+        start_element = (handler::XPStreamHandler, name::AbstractString, attrs_in::Dict{AbstractString,AbstractString}) -> nothing
+        end_element = (handler::XPStreamHandler, name::AbstractString) -> nothing
+        start_namespace = (handler::XPStreamHandler, prefix::AbstractString, uri::AbstractString) -> nothing
+        end_namespace = (handler::XPStreamHandler, prefix::AbstractString) -> nothing
 
         new(start_cdata, end_cdata, comment, character_data, default,
             default_expand, start_element, end_element, start_namespace,
@@ -72,8 +72,8 @@ cb_streaming_cdata = cfunction(streaming_cdata, Void, (Ptr{Void},Ptr{UInt8}, Cin
 
 function streaming_start_element(p_cbs::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
-    txt::String = bytestring(name)
-    attrs::Dict{String,String} = attrs_in_to_dict(attrs_in)
+    txt::AbstractString = bytestring(name)
+    attrs::Dict{AbstractString,AbstractString} = attrs_in_to_dict(attrs_in)
 
     h.cbs.start_element(h, txt, attrs)
 
@@ -84,7 +84,7 @@ cb_streaming_start_element = cfunction(streaming_start_element, Void, (Ptr{Void}
 
 function streaming_end_element(p_h::Ptr{Void}, name::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
-    txt::String = bytestring(name)
+    txt::AbstractString = bytestring(name)
     @DBG_PRINT("End element: $txt, current element: $(xph.pdata.name) ")
 
     h.cbs.end_element(h, txt)
@@ -204,7 +204,7 @@ function free(h::XPStreamHandler)
     XML_ParserFree(h.parser)
 end
 
-function parsefile(filename::String,callbacks::XPCallbacks; bufferlines=1024, data=nothing)
+function parsefile(filename::AbstractString,callbacks::XPCallbacks; bufferlines=1024, data=nothing)
     h = make_parser(callbacks, data)
     # TODO: Support suspending for files too
     suspended = false
@@ -250,7 +250,7 @@ function parsefile(filename::String,callbacks::XPCallbacks; bufferlines=1024, da
     end
 end
 
-function parse(txt::String,callbacks::XPCallbacks; data=nothing)
+function parse(txt::AbstractString,callbacks::XPCallbacks; data=nothing)
     h = make_parser(callbacks, data)
     suspended = false
 
