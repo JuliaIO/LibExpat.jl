@@ -80,7 +80,7 @@ end
 
 
 type XPHandle
-  parser::@compat(Union{XML_Parser,Nothing})
+  parser::@compat(Union{XML_Parser,Void})
   pdata::ETree
   in_cdata::Bool
 
@@ -114,7 +114,7 @@ function xp_make_parser(sep='\0')
 end
 
 
-function xp_geterror(p::@compat(Union{XML_Parser,Nothing}))
+function xp_geterror(p::@compat(Union{XML_Parser,Void}))
     ec = XML_GetErrorCode(p)
 
     if ec != 0

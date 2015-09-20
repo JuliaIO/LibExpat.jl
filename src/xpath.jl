@@ -649,7 +649,7 @@ function consume_function(xpath, k, name, ismacro)
     end
     fntype = get(xpath_functions, name, nothing)
     if fntype === nothing
-        return k, nothing, Nothing, false
+        return k, nothing, Void, false
     end
     minargs = fntype[2]::Int
     maxargs = fntype[3]::Int
@@ -849,7 +849,7 @@ function xpath_expr{T<:AbstractString}(pd, xp::XPath{T}, filter::@compat(Tuple{S
     if op == :attribute
         if !isa(pd, ETree)
             return AbstractString[]
-        elseif isa(args, Nothing)
+        elseif isa(args, Void)
             return pd.attr
         else
             attr = get(pd.attr, args::T, nothing)
