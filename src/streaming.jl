@@ -9,24 +9,6 @@ type XPCallbacks
     end_element::Function
     start_namespace::Function
     end_namespace::Function
-
-    # Create an XPCallbacks instance filled with nop callbacks
-    function XPCallbacks()
-        start_cdata = (handler::XPStreamHandler) -> nothing
-        end_cdata = (handler::XPStreamHandler) -> nothing
-        comment = (handler::XPStreamHandler, txt::AbstractString) -> nothing
-        character_data = (handler::XPStreamHandler, txt::AbstractString) -> nothing
-        default = (handler::XPStreamHandler, txt::AbstractString) -> nothing
-        default_expand = (handler::XPStreamHandler, txt::AbstractString) -> nothing
-        start_element = (handler::XPStreamHandler, name::AbstractString, attrs_in::Dict{AbstractString,AbstractString}) -> nothing
-        end_element = (handler::XPStreamHandler, name::AbstractString) -> nothing
-        start_namespace = (handler::XPStreamHandler, prefix::AbstractString, uri::AbstractString) -> nothing
-        end_namespace = (handler::XPStreamHandler, prefix::AbstractString) -> nothing
-
-        new(start_cdata, end_cdata, comment, character_data, default,
-            default_expand, start_element, end_element, start_namespace,
-            end_namespace)
-    end
 end
 
 
@@ -35,6 +17,21 @@ type XPStreamHandler{D}
     parser::XML_Parser
     data::D
 end
+
+
+# Create an XPCallbacks instance filled with nop callbacks
+XPCallbacks() = XPCallbacks(
+    (handler::XPStreamHandler) -> nothing,
+    (handler::XPStreamHandler) -> nothing,
+    (handler::XPStreamHandler, txt::AbstractString) -> nothing,
+    (handler::XPStreamHandler, txt::AbstractString) -> nothing,
+    (handler::XPStreamHandler, txt::AbstractString) -> nothing,
+    (handler::XPStreamHandler, txt::AbstractString) -> nothing,
+    (handler::XPStreamHandler, name::AbstractString, attrs_in::Dict{AbstractString,AbstractString}) -> nothing,
+    (handler::XPStreamHandler, name::AbstractString) -> nothing,
+    (handler::XPStreamHandler, prefix::AbstractString, uri::AbstractString) -> nothing,
+    (handler::XPStreamHandler, prefix::AbstractString) -> nothing
+)
 
 
 function streaming_start_cdata(p_cbs::Ptr{Void})
@@ -276,4 +273,3 @@ function parse(txt::AbstractString,callbacks::XPCallbacks; data=nothing)
         end
     end
 end
-
