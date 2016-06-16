@@ -46,7 +46,7 @@ println(f, "#   Generating #define constants")
 
 fe = open("$(OUT_DIR)lX_exports_h.jl", "w+")
 println(fe, "#   Generating exports")
-for e in split(open(readall, "$(OUT_DIR)lX_expat_h.jl"), "\n")
+for e in split(open(readstring, "$(OUT_DIR)lX_expat_h.jl"), "\n")
   m = match(r"^\s*\@c\s+[\w\:\{\}\_]+\s+(\w+)", e)
   if (m != nothing)
 #    println(m)
@@ -54,7 +54,7 @@ for e in split(open(readall, "$(OUT_DIR)lX_expat_h.jl"), "\n")
   end
 end
 
-for e in split(open(readall, "$(OUT_DIR)lX_common_h.jl"), "\n")
+for e in split(open(readstring, "$(OUT_DIR)lX_common_h.jl"), "\n")
   m = match(r"^\s*\@ctypedef\s+(\w+)", e)
   if (m != nothing)
 #   println(m.captures[1])

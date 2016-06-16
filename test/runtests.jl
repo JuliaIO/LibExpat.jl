@@ -1,9 +1,10 @@
 using LibExpat
 using Base.Test
+using Compat
 
 const DATADIR = joinpath(dirname(@__FILE__), "data")
 
-pd = xp_parse(open(readall, joinpath(DATADIR,"t_s1.txt")))
+pd = xp_parse(open(readstring, joinpath(DATADIR,"t_s1.txt")))
 @test isa(pd, ETree)
 println("PASSED 1")
 
@@ -72,12 +73,12 @@ println("PASSED 12.1")
 @test (LibExpat.find(pd, "/ListBucketResult/Contents[2]/Owner/JUNK#string") == nothing)
 println("PASSED 12.2")
 
-pd = xp_parse(open(readall, joinpath(DATADIR,"utf8.xml")))
+pd = xp_parse(open(readstring, joinpath(DATADIR,"utf8.xml")))
 @test isa(pd, ParsedData)
 println("PASSED 13")
 
 
-pd = xp_parse(open(readall, joinpath(DATADIR,"wiki.xml")))
+pd = xp_parse(open(readstring, joinpath(DATADIR,"wiki.xml")))
 @test isa(pd, ParsedData)
 ret = LibExpat.find(pd, "/page/revision/id#string")
 @test ret == "557462847"

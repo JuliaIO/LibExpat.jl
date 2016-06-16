@@ -294,7 +294,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
             returntype = AbstractString
         elseif name[1] == '$'
             @xpath_parse axis :element
-            @xpath_parse :name Expr(:call, :string, esc(symbol(name[2:end])))
+            @xpath_parse :name Expr(:call, :string, esc(@compat(Symbol(name[2:end]))))
         else
             @xpath_parse axis :element
             if name != "*"
@@ -439,7 +439,9 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                         write(str,c)
                         continue
                     elseif !isalnum(c) && c!='_' && c!='!'
-                        push!(sexpr.args, Expr(:call,:string,esc(symbol(takebuf_string(str)))))
+                        push!(sexpr.args, Expr(:call,:string,esc(
+                            @compat(Symbol(takebuf_string(str)))
+                        )))
                         var = false
                         if parenvar
                             if c != ')' # we aren't interested in writing a general purpose string parser
@@ -471,7 +473,9 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
             end
             if var == true
                 (nb_available(str) != 0 && !parenvar) || error("invalid interpolation syntax at $j")
-                push!(sexpr.args, Expr(:call,:string,esc(symbol(takebuf_string(str)))))
+                push!(sexpr.args, Expr(:call,:string,esc(
+                    @compat(Symbol(takebuf_string(str)))
+                )))
             else
                 nb_available(str) != 0 && push!(sexpr.args, takebuf_string(str))
             end

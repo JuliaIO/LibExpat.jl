@@ -57,7 +57,7 @@ cb_streaming_end_cdata = cfunction(streaming_end_cdata, Void, (Ptr{Void},))
 function streaming_cdata(p_cbs::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
-    txt = bytestring(s, @compat(Int(len)))
+    txt = unsafe_string(s, @compat(Int(len)))
 
     @DBG_PRINT("Found CData : " * txt)
     h.cbs.character_data(h, txt)
@@ -69,7 +69,7 @@ cb_streaming_cdata = cfunction(streaming_cdata, Void, (Ptr{Void},Ptr{UInt8}, Cin
 
 function streaming_start_element(p_cbs::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
-    txt::AbstractString = bytestring(name)
+    txt::AbstractString = unsafe_string(name)
     attrs::Dict{AbstractString,AbstractString} = attrs_in_to_dict(attrs_in)
 
     h.cbs.start_element(h, txt, attrs)
@@ -81,7 +81,7 @@ cb_streaming_start_element = cfunction(streaming_start_element, Void, (Ptr{Void}
 
 function streaming_end_element(p_h::Ptr{Void}, name::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
-    txt::AbstractString = bytestring(name)
+    txt::AbstractString = unsafe_string(name)
     @DBG_PRINT("End element: $txt, current element: $(xph.pdata.name) ")
 
     h.cbs.end_element(h, txt)
@@ -92,7 +92,7 @@ cb_streaming_end_element = cfunction(streaming_end_element, Void, (Ptr{Void},Ptr
 
 function streaming_comment(p_h::Ptr{Void}, data::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
-    txt = bytestring(data)
+    txt = unsafe_string(data)
     @DBG_PRINT("Found comment : " * txt)
 
     h.cbs.comment(h, txt)
@@ -104,7 +104,7 @@ cb_streaming_comment = cfunction(streaming_comment, Void, (Ptr{Void},Ptr{UInt8})
 
 function streaming_default(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_h)::XPStreamHandler
-    txt = bytestring(data)
+    txt = unsafe_string(data)
     @DBG_PRINT("Default : " * txt)
 
     h.cbs.default(h, txt)
@@ -116,7 +116,7 @@ cb_streaming_default = cfunction(streaming_default, Void, (Ptr{Void},Ptr{UInt8},
 
 function streaming_default_expand(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
-    txt = bytestring(data)
+    txt = unsafe_string(data)
     @DBG_PRINT("Default Expand : " * txt)
 
     h.cbs.default_expand(h, txt)
@@ -128,8 +128,8 @@ cb_streaming_default_expand = cfunction(streaming_default_expand, Void, (Ptr{Voi
 
 function streaming_start_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
-    prefix = bytestring(prefix)
-    uri = bytestring(uri)
+    prefix = unsafe_string(prefix)
+    uri = unsafe_string(uri)
     @DBG_PRINT("start namespace prefix : $prefix, uri: $uri")
 
     h.cbs.start_namespace(h, prefix, uri)
@@ -141,7 +141,7 @@ cb_streaming_start_namespace = cfunction(streaming_start_namespace, Void, (Ptr{V
 
 function streaming_end_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
-    prefix = bytestring(prefix)
+    prefix = unsafe_string(prefix)
     @DBG_PRINT("end namespace prefix : $prefix")
 
     h.cbs.end_namespace(h, prefix)
@@ -215,7 +215,7 @@ function parsefile(filename::AbstractString,callbacks::XPCallbacks; bufferlines=
                 write(io, readline(file))
                 i += 1
             end
-            txt = bytestring(io)
+            txt = Compat.bytestring(io)
             rc = XML_Parse(h.parser, txt, length(txt.data), 0)
             if (rc != XML_STATUS_OK) && (XML_GetErrorCode(h.parser) != XML_ERROR_ABORTED)
                 # Do not fail if the user aborted the parsing
