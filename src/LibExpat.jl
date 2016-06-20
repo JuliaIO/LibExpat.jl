@@ -2,6 +2,8 @@ module LibExpat
 
 using Compat
 import Base: getindex, show, parse
+import Compat.String
+import Compat.unsafe_string
 
 @windows_only const libexpat = "libexpat-1"
 @unix_only const libexpat = "libexpat"
@@ -119,9 +121,9 @@ function xp_geterror(p::@compat(Union{XML_Parser,Void}))
 
     if ec != 0
         @DBG_PRINT(XML_GetErrorCode(p))
-        @DBG_PRINT(bytestring(XML_ErrorString(XML_GetErrorCode(p))))
+        @DBG_PRINT(unsafe_string(XML_ErrorString(XML_GetErrorCode(p))))
 
-        return ( bytestring(XML_ErrorString(XML_GetErrorCode(p))),
+        return ( unsafe_string(XML_ErrorString(XML_GetErrorCode(p))),
                 XML_GetCurrentLineNumber(p),
                 XML_GetCurrentColumnNumber(p) + 1,
                 XML_GetCurrentByteIndex(p) + 1
@@ -163,7 +165,7 @@ cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 function cdata(p_xph::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
 
-    txt = bytestring(s, @compat(Int(len)))
+    txt = unsafe_string(s, @compat(Int(len)))
     push!(xph.pdata.elements, txt)
 
     @DBG_PRINT("Found CData : " * txt)
@@ -174,7 +176,7 @@ cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 function comment(p_xph::Ptr{Void}, data::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    txt = bytestring(data)
+    txt = unsafe_string(data)
     @DBG_PRINT("Found comment : " * txt)
     return;
 end
@@ -183,7 +185,7 @@ cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{UInt8}))
 
 function default(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    txt = bytestring(data)
+    txt = unsafe_string(data)
     @DBG_PRINT("Default : " * txt)
     return;
 end
@@ -192,7 +194,7 @@ cb_default = cfunction(default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 function default_expand(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    txt = bytestring(data)
+    txt = unsafe_string(data)
     @DBG_PRINT("Default Expand : " * txt)
     return;
 end
@@ -205,13 +207,13 @@ function attrs_in_to_dict(attrs_in::Ptr{Ptr{UInt8}})
         i = 1
         attr = unsafe_load(attrs_in, i)
         while (attr != C_NULL)
-            k = bytestring(attr)
+            k = unsafe_string(attr)
 
             i=i+1
             attr = unsafe_load(attrs_in, i)
 
             if (attr == C_NULL) error("Attribute does not have a name!") end
-            v = bytestring(attr)
+            v = unsafe_string(attr)
 
             attrs[k] = v
 
@@ -227,7 +229,7 @@ end
 
 function start_element(p_xph::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    name = bytestring(name)
+    name = unsafe_string(name)
     @DBG_PRINT("Start Elem name : $name,  current element: $(xph.pdata.name) ")
 
     new_elem = ETree(name)
@@ -246,7 +248,7 @@ cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{UInt8}, Ptr{Ptr
 
 function end_element(p_xph::Ptr{Void}, name::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    txt = bytestring(name)
+    txt = unsafe_string(name)
     @DBG_PRINT("End element: $txt, current element: $(xph.pdata.name) ")
 
     xph.pdata = xph.pdata.parent
@@ -258,8 +260,8 @@ cb_end_element = cfunction(end_element, Void, (Ptr{Void},Ptr{UInt8}))
 
 function start_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    prefix = bytestring(prefix)
-    uri = bytestring(uri)
+    prefix = unsafe_string(prefix)
+    uri = unsafe_string(uri)
     @DBG_PRINT("start namespace prefix : $prefix, uri: $uri")
     return;
 end
@@ -268,7 +270,7 @@ cb_start_namespace = cfunction(start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr
 
 function end_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    prefix = bytestring(prefix)
+    prefix = unsafe_string(prefix)
     @DBG_PRINT("end namespace prefix : $prefix")
     return;
 end
