@@ -8,7 +8,7 @@
 
 # XPath Spec: http://www.w3.org/TR/xpath/
 
-import Base.typeseq
+import Base: typeseq, |
 import Compat
 
 const xpath_axes = Compat.@Dict(
@@ -767,15 +767,15 @@ function xpath_combined_checked(pd1::XPath, pd2::XPath)
     push!(xp, (:(|),(pd1.filter[2], pd2.filter[2])))
     return (filt, xp)
 end
-Base.|{T,S}(pd1::XPath{T}, pd2::XPath{S}) =
+|{T,S}(pd1::XPath{T}, pd2::XPath{S}) =
     XPath{@compat(Union{T,S}),Any}( xpath_combined_checked(pd1,pd2) )
-Base.|{T,S,ret1<:Vector,ret2<:Vector}(pd1::XPath{T,ret1}, pd2::XPath{S,ret2}) =
+|{T,S,ret1<:Vector,ret2<:Vector}(pd1::XPath{T,ret1}, pd2::XPath{S,ret2}) =
     XPath{@compat(Union{T,S}),Vector{Any}}( xpath_combined_checked(pd1,pd2) )
-Base.|{T,S,ret<:Vector}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
+|{T,S,ret<:Vector}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
     XPath{@compat(Union{T,S}),ret}( xpath_combined_checked(pd1,pd2) )
-Base.|{T,S,ret}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
+|{T,S,ret}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
     XPath{@compat(Union{T,S}),ret}( xpath_combined_checked(pd1,pd2) )
-#Base.(:*){T,S,ret}(pd::XPath{T,ret}, filters::S) = XPath{@compat(Union{T,S}),ret}( ??? )
+#*{T,S,ret}(pd::XPath{T,ret}, filters::S) = XPath{@compat(Union{T,S}),ret}( ??? )
 
 
 xpath_boolean(a::Bool) = a
