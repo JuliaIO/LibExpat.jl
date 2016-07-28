@@ -5,8 +5,11 @@ import Base: getindex, show, parse
 import Compat.String
 import Compat.unsafe_string
 
-@windows_only const libexpat = "libexpat-1"
-@unix_only const libexpat = "libexpat"
+if is_windows() 
+    const libexpat = "libexpat-1"
+elseif is_unix() 
+    const libexpat = "libexpat"
+end
 include("lX_common_h.jl")
 include("lX_defines_h.jl")
 include("lX_expat_h.jl")
