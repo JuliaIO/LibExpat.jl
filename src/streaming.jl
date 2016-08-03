@@ -215,7 +215,7 @@ function parsefile(filename::AbstractString,callbacks::XPCallbacks; bufferlines=
                 write(io, readline(file))
                 i += 1
             end
-            txt = Compat.bytestring(io)
+            txt = Compat.String(io)
             rc = XML_Parse(h.parser, txt, length(txt.data), 0)
             if (rc != XML_STATUS_OK) && (XML_GetErrorCode(h.parser) != XML_ERROR_ABORTED)
                 # Do not fail if the user aborted the parsing
