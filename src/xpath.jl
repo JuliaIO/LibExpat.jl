@@ -665,7 +665,7 @@ function consume_function(xpath, k, name, ismacro)
     end
 
     c, k2 = next(xpath,k)
-    if c == UInt32(','
+    if c == UInt32(',')
         error("unexpected , in functions args at $k")
     end
     has_fn_last::Bool = (fntype[1] == :last)
