@@ -152,7 +152,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
     end
     # 1. Consume root node
     c, k2 = next(xpath,k)
-    if c == '/'
+    if c == UInt32('/')
         @xpath_parse :root :node
         k = k2
     end
@@ -170,7 +170,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
         c, k2 = next(xpath,k)
         i = k
         j = 0
-        if c == '/'
+        if c == UInt32('/')
             @xpath_parse :descendant_or_self :node
             returntype = Any
             i = k = k2 #advance to next
@@ -178,7 +178,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
         # 2. Consume node name
         while !done(xpath,k)
             c, k2 = next(xpath,k)
-            if c == ':'
+            if c == UInt32(':')
                 # 2a. Consume axis name
                 if !havename && j == 0
                     error("unexpected : at $k $i:$j")
@@ -209,7 +209,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
                     colonpos = 0
                 end #if
                 # 2b. Consume node name
-                if j == 0 && c == '*'
+                if j == 0 && c == UInt32('*')
                     havename = true
                     name = "*"
                     i = k = k2
@@ -221,13 +221,13 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
                         name = xpath[i:j]
                         j = 0
                     end
-                    if c == '('
+                    if c == UInt32('(')
                         k2 = consume_whitespace(xpath, k2)
                         if done(xpath,k2)
                             error("unexpected end to xpath after (")
                         end
                         c, k3 = next(xpath,k2)
-                        if c != ')'
+                        if c != UInt32(')')
                             error("unexpected character before ) in nodetype() expression at $k2")
                         end
                         k = k3
@@ -239,7 +239,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
                     i = k2
                 elseif havename # && !isspace && !separator
                     break
-                elseif c == '-' && j == 0
+                elseif c == UInt32('-') && j == 0
                     error("TODO: -negation")
                 else # text character
                     j = k
@@ -307,7 +307,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
             if isspace(c)
                 k = k2
                 continue
-            elseif c == '/'
+            elseif c == UInt32('/')
                 if done(xpath,k)
                     error("xpath should not end with a /")
                 #elseif returntype !== ETree # this is a valid XPath
@@ -315,7 +315,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
                 end
                 k = k2
                 break
-            elseif c == '|'
+            elseif c == UInt32('|')
                 k, parsed2, rt2 = xpath_parse(xpath, k2, ismacro)
                 if rt2 !== returntype
                     returntype = Any
@@ -327,7 +327,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
                     parsed = push!(Array(SymbolAny, 0), (:(|), (parsed, parsed2)))
                 end
                 return k, parsed, returntype
-            elseif c == '['
+            elseif c == UInt32('[')
                 i = k
                 k = k2
                 k, filter, rettype, has_last_fn = xpath_parse_expr(xpath, k, 0, ismacro)
@@ -341,7 +341,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
                     error("unmatched ] at $i")
                 end
                 c, k2 = next(xpath, k)
-                if (c != ']')
+                if c != UInt32(']')
                     error("expected matching ] at $k for [ at $i, found $c")
                 end
                 k = k2
@@ -362,17 +362,17 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
     prevtokenspecial = true
     while !done(xpath, k)
         c, k2 = next(xpath, k)
-        if prevtokenspecial && c == '*'
+        if prevtokenspecial && c == UInt32('*')
             nothing
-        elseif c == '@' || c == ':'
+        elseif c == UInt32('@') || c == UInt32(':')
             prevtokenspecial = true
             k = k2
             continue
-        elseif c == '"' || c == '\''
+        elseif c == UInt32('"') || c == UInt32('\'')
             c2::Char = 0
             escape = false
             while c2 != c && !escape
-                if ismacro && c2 == '\\' && !escape
+                if ismacro && c2 == UInt32('\\') && !escape
                     escape = true
                 else
                     escape = false
@@ -387,7 +387,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
             k = k2
             break
         elseif isspace(c) || in(c, xpath_separators)
-            if c == '/'
+            if c == UInt32('/')
                 j = k
             end
             break
@@ -429,7 +429,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                 c, substr_k = next(xpath,substr_k)
                 if var == true
                     if nb_available(str) == 0
-                        if !parenvar && c == '('
+                        if !parenvar && c == UInt32('(')
                             parenvar = true
                             continue
                         end
@@ -444,7 +444,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                         )))
                         var = false
                         if parenvar
-                            if c != ')' # we aren't interested in writing a general purpose string parser
+                            if c != UInt32(')') # we aren't interested in writing a general purpose string parser
                                 error("invalid interpolation syntax at $substr_k")
                             end
                             continue
@@ -454,7 +454,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                         continue
                     end
                 end
-                if c == '\\'
+                if c == UInt32('\\')
                     if escape
                         write(str,c)
                     else
@@ -462,7 +462,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                     end
                 else
                     escape = false
-                    if c == '$'
+                    if c == UInt32('$')
                         var = true
                         parenvar = false
                         nb_available(str) != 0 && push!(sexpr.args, takebuf_string(str))
@@ -490,7 +490,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
         fn = @xpath_fn :string sexpr
         returntype = AbstractString
     else
-        if c == '('
+        if c == UInt32('(')
             name = xpath[i:j]
             k, fn_, returntype, has_fn_last = consume_function(xpath, k2, name, ismacro)
         else
@@ -522,7 +522,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
     k = consume_whitespace(xpath, k)
     while !done(xpath,k)
         c1,k1 = next(xpath,k)
-        if c1 == ']' || c1 == ')' || c1 == ','
+        if c1 == UInt32(']') || c1 == UInt32(')') || c1 == UInt32(',')
             break
         end
         if done(xpath,k2)
@@ -530,7 +530,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
         end
         c2,k2 = next(xpath,k1)
         i = k #backup k
-        if c1 == 'o' && c2 == 'r' # lowest precedence (0)
+        if c1 == UInt32('o') && c2 == UInt32('r') # lowest precedence (0)
             if done(xpath,k2)
                 error("unexpected end to xpath")
             end
@@ -543,12 +543,12 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
             k = k3
             returntype = Bool
 
-        elseif c1 == 'a' && c2 == 'n'
+        elseif c1 == UInt32('a') && c2 == UInt32('n')
             if done(xpath,k2)
                 error("unexpected end to xpath")
             end
             c3,k3 = next(xpath,k2)
-            if c3 != 'd'
+            if c3 != UInt32('d')
                 error("invalid operator $c at $k")
             end
             if done(xpath,k3)
@@ -563,20 +563,20 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
             k = k3
             returntype = Bool
 
-        elseif c1 == '='
+        elseif c1 == UInt32('=')
             op_precedence = 2
             op = :(=)
             k = k1
             returntype = Bool
-        elseif c1 == '!' && c2 == '='
+        elseif c1 == UInt32('!') && c2 == UInt32('=')
             op_precedence = 2
             op = :(!=)
             k = k2
             returntype = Bool
 
-        elseif c1 == '>'
+        elseif c1 == UInt32('>')
             op_precedence = 3
-            if c2 == '='
+            if c2 == UInt32('=')
                 op = :(>=)
                 k = k2
             else
@@ -584,9 +584,9 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                 k = k1
             end
             returntype = Bool
-        elseif c1 == '<'
+        elseif c1 == UInt32('<')
             op_precedence = 3
-            if c2 == '='
+            if c2 == UInt32('=')
                 op = :(<=)
                 k = k2
             else
@@ -595,12 +595,12 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
             end
             returntype = Bool
 
-        elseif c1 == '+'
+        elseif c1 == UInt32('+')
             op_precedence = 4
             op = :(+)
             k = k1
             returntype = Number
-        elseif c1 == '-'
+        elseif c1 == UInt32('-')
             op_precedence = 4
             op = :(-)
             k = k1
@@ -615,9 +615,9 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                 error("unexpected end to xpath")
             end
             op_precedence = 5
-            if c1 == 'd' && c2 == 'i' && c3 == 'v'
+            if c1 == UInt32('d') && c2 == UInt32('i') && c3 == UInt32('v')
                 op = :div
-            elseif c1 == 'm' && c2 == 'o' && c3 == 'd'
+            elseif c1 == UInt32('m') && c2 == UInt32('o') && c3 == UInt32('d')
                 op = :mod
             else
                 error("invalid operator $c1 at $k")
@@ -665,12 +665,12 @@ function consume_function(xpath, k, name, ismacro)
     end
 
     c, k2 = next(xpath,k)
-    if c == ','
+    if c == UInt32(','
         error("unexpected , in functions args at $k")
     end
     has_fn_last::Bool = (fntype[1] == :last)
     len_args = 0
-    while c != ')'
+    while c != UInt32(')')
         k, arg, returntype, has_fn_last2 = xpath_parse_expr(xpath, k, 0, ismacro)
         if ismacro
             args = Expr(:call, :push!, args, arg)
@@ -684,7 +684,7 @@ function consume_function(xpath, k, name, ismacro)
             error("unexpected end to xpath after (")
         end
         c, k2 = next(xpath, k)
-        if c != ',' && c != ')'
+        if c != UInt32(',') && c != UInt32(')')
             error("unexpected character $c at $k")
         end
         k = k2
