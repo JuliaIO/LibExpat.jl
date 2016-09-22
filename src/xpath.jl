@@ -401,7 +401,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
     end
     k = consume_whitespace(xpath, k)
     if done(xpath, k)
-        c = 0
+        c = '\0'
         k2 = k
     else
         c, k2 = next(xpath, k)
