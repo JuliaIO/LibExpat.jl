@@ -15,8 +15,6 @@ include("lX_defines_h.jl")
 include("lX_expat_h.jl")
 #include("lX_exports_h.jl")
 
-@c Ptr{XML_LChar} XML_ErrorString (Cint,) libexpat
-
 export ETree, xp_parse, xpath, @xpath_str
 export ParsedData # deprecated
 
@@ -71,7 +69,7 @@ function show(io::IO, pd::ETree)
     end
 end
 
-string_value(pd::ETree) = takebuf_string(string_value(pd,IOBuffer()))
+string_value(pd::ETree) = String(take!(string_value(pd,IOBuffer())))
 function string_value(pd::ETree, str::IOBuffer)
     for node in pd.elements
         if isa(node, AbstractString)
