@@ -63,7 +63,7 @@
 @c Ptr{Void} XML_MemRealloc (XML_Parser, Ptr{Void}, size_t) libexpat
 @c Void XML_MemFree (XML_Parser, Ptr{Void}) libexpat
 @c Void XML_ParserFree (XML_Parser,) libexpat
-@c Ptr{XML_LChar} XML_ErrorString (Void,) libexpat
+@c Ptr{XML_LChar} XML_ErrorString (Cint,) libexpat
 @c Ptr{XML_LChar} XML_ExpatVersion () libexpat
 @c XML_Expat_Version XML_ExpatVersionInfo () libexpat
 @c Ptr{XML_Feature} XML_GetFeatureList () libexpat

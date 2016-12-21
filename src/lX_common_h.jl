@@ -1,13 +1,13 @@
 macro c(ret_type, func, arg_types, lib)
   local args_in = Any[@compat Symbol(string('a',x)) for x in 1:length(arg_types.args) ]
   quote
-    $(esc(func))($(args_in...)) = ccall( ($(string(func)), $(esc(lib))), $ret_type, $arg_types, $(args_in...) )
+    $(esc(func))($(args_in...)) = ccall( ($(string(func)), $(esc(lib))), $(esc(ret_type)), $(esc(arg_types)), $(args_in...) )
   end
 end
 
 macro ctypedef(fake_t,real_t)
   quote
-    typealias $fake_t $real_t
+    typealias $(esc(fake_t)) $(esc(real_t))
   end
 end
 
