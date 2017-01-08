@@ -122,7 +122,7 @@ macro xpath_parse(arg1, arg2)
             end
             $(esc(:parsed)) = Expr(:call, :push!, $(esc(:parsed)), Expr(:tuple,Expr(:quote,$(esc(arg1))),a2))
         else
-            push!($(esc(:parsed))::Vector{SymbolAny}, ($(arg1),$(arg2)))
+            push!($(esc(:parsed))::Vector{SymbolAny}, ($(esc(arg1)),$(esc(arg2))))
         end
     )
 end
@@ -135,7 +135,7 @@ macro xpath_fn(arg1, arg2)
             end
             Expr(:tuple,Expr(:quote,$(esc(arg1))),a2)
         else
-            ($(arg1),$(arg2))
+            ($(esc(arg1)),$(esc(arg2)))
         end
     )
 end
