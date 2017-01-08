@@ -288,7 +288,7 @@ function xp_parse(txt::AbstractString)
     xph = xp_make_parser()
 
     try
-        rc = XML_Parse(xph.parser, txt, length(txt.data), 1)
+        rc = XML_Parse(xph.parser, txt, sizeof(txt), 1)
         if (rc != XML_STATUS_OK) error("Error parsing document : $rc") end
 
         # The root element will only have a single child element in a well formed XML
