@@ -216,7 +216,7 @@ function parsefile(filename::AbstractString,callbacks::XPCallbacks; bufferlines=
                 i += 1
             end
             txt = Compat.String(io)
-            rc = XML_Parse(h.parser, txt, length(txt.data), 0)
+            rc = XML_Parse(h.parser, txt, sizeof(txt), 0)
             if (rc != XML_STATUS_OK) && (XML_GetErrorCode(h.parser) != XML_ERROR_ABORTED)
                 # Do not fail if the user aborted the parsing
                 error("Error parsing document : $rc")
@@ -252,7 +252,7 @@ function parse(txt::AbstractString,callbacks::XPCallbacks; data=nothing)
     suspended = false
 
     try
-        rc = XML_Parse(h.parser, txt, length(txt.data), 1)
+        rc = XML_Parse(h.parser, txt, sizeof(txt), 1)
         if (rc == XML_STATUS_SUSPENDED)
             suspended = true
             return h
