@@ -440,7 +440,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                         continue
                     elseif !isalnum(c) && c!='_' && c!='!'
                         push!(sexpr.args, Expr(:call,:string,esc(
-                            @compat(Symbol(takebuf_string(str)))
+                            @compat(Symbol(String(take!(str))))
                         )))
                         var = false
                         if parenvar
@@ -465,7 +465,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                     if c == '$'
                         var = true
                         parenvar = false
-                        nb_available(str) != 0 && push!(sexpr.args, takebuf_string(str))
+                        nb_available(str) != 0 && push!(sexpr.args, String(take!(str)))
                     else
                         write(str,c)
                     end
@@ -474,10 +474,10 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
             if var == true
                 (nb_available(str) != 0 && !parenvar) || error("invalid interpolation syntax at $j")
                 push!(sexpr.args, Expr(:call,:string,esc(
-                    @compat(Symbol(takebuf_string(str)))
+                    @compat(Symbol(String(take!(str))))
                 )))
             else
-                nb_available(str) != 0 && push!(sexpr.args, takebuf_string(str))
+                nb_available(str) != 0 && push!(sexpr.args, String(take!(str)))
             end
             if length(sexpr.args) == 1
                 sexpr = ""
@@ -829,7 +829,7 @@ function xpath_normalize(s::AbstractString)
             write(normal,c)
         end
     end
-    takebuf_string(normal)
+    String(take!(normal))
 end
 
 function xpath_translate(a::AbstractString,b::AbstractString,c::AbstractString)
@@ -844,7 +844,7 @@ function xpath_translate(a::AbstractString,b::AbstractString,c::AbstractString)
             write(tr, c[i])
         end
     end
-    takebuf_string(tr)
+    String(take!(tr))
 end
 
 function xpath_expr{T<:AbstractString}(pd, xp::XPath{T}, filter::@compat(Tuple{Symbol,ANY}), position::Int, last::Int, output_hint::DataType)
@@ -1049,7 +1049,7 @@ function xpath_expr{T<:AbstractString}(pd, xp::XPath{T}, filter::@compat(Tuple{S
         for arg = args
             write(a, xpath_string(xpath_expr(pd, xp, arg::SymbolAny, position, last, Any))::AbstractString)
         end
-        return takebuf_string(a)::AbstractString
+        return String(take!(a))::AbstractString
     elseif op == :substring_before
         a = xpath_string(xpath_expr(pd, xp, args[1]::SymbolAny, position, last, Any))::AbstractString
         b = xpath_string(xpath_expr(pd, xp, args[2]::SymbolAny, position, last, Any))::AbstractString
