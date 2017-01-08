@@ -1,9 +1,9 @@
 module LibExpat
 
 using Compat
+using Compat: String, unsafe_string
+
 import Base: getindex, show, parse
-import Compat.String
-import Compat.unsafe_string
 
 if is_windows() 
     const libexpat = "libexpat-1"
@@ -34,7 +34,7 @@ type ETree
     # Dict of tag attributes as name-value pairs
     attr::Dict{AbstractString,AbstractString}
     # List of child elements.
-    elements::Vector{@compat(Union{ETree,AbstractString})}
+    elements::Vector{Union{ETree,AbstractString}}
     parent::ETree
 
     ETree() = ETree("")
@@ -42,7 +42,7 @@ type ETree
         pd=new(
             name,
             Dict{AbstractString, AbstractString}(),
-            @compat(Union{ETree,AbstractString})[])
+            Union{ETree,AbstractString}[])
         pd.parent=pd
         pd
     end
@@ -83,7 +83,7 @@ end
 
 
 type XPHandle
-  parser::@compat(Union{XML_Parser,Void})
+  parser::Union{XML_Parser,Void}
   pdata::ETree
   in_cdata::Bool
 
@@ -117,7 +117,7 @@ function xp_make_parser(sep='\0')
 end
 
 
-function xp_geterror(p::@compat(Union{XML_Parser,Void}))
+function xp_geterror(p::Union{XML_Parser,Void})
     ec = XML_GetErrorCode(p)
 
     if ec != 0
@@ -166,7 +166,7 @@ cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 function cdata(p_xph::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
 
-    txt = unsafe_string(s, @compat(Int(len)))
+    txt = unsafe_string(s, Int(len))
     push!(xph.pdata.elements, txt)
 
     @DBG_PRINT("Found CData : " * txt)
@@ -320,7 +320,7 @@ function find{T<:AbstractString}(pd::ETree, path::T)
         end
     end
 
-    xp= Array(@compat(Tuple{Symbol,Any}),0)
+    xp= Array(Tuple{Symbol,Any},0)
     if path[1] == '/'
         # This will treat the incoming pd as the root of the tree
         push!(xp, (:root,:element))

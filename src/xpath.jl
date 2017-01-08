@@ -67,7 +67,7 @@ const xpath_functions = Compat.@Dict( # (name, min args, max args)
     "ceiling" => (:ceiling,1,1,Int),
     "round" => (:round,1,1,Float64))
 
-typealias SymbolAny @compat(Tuple{Symbol,Any})
+typealias SymbolAny Tuple{Symbol,Any}
 
 macro xpath_str(xpath)
     xp, returntype = xpath_parse(xpath, true)
@@ -294,7 +294,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
             returntype = AbstractString
         elseif name[1] == '$'
             @xpath_parse axis :element
-            @xpath_parse :name Expr(:call, :string, esc(@compat(Symbol(name[2:end]))))
+            @xpath_parse :name Expr(:call, :string, esc(Symbol(name[2:end])))
         else
             @xpath_parse axis :element
             if name != "*"
@@ -439,9 +439,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
                         write(str,c)
                         continue
                     elseif !isalnum(c) && c!='_' && c!='!'
-                        push!(sexpr.args, Expr(:call,:string,esc(
-                            @compat(Symbol(String(take!(str))))
-                        )))
+                        push!(sexpr.args, Expr(:call,:string,esc(Symbol(String(take!(str))))))
                         var = false
                         if parenvar
                             if c != ')' # we aren't interested in writing a general purpose string parser
@@ -473,9 +471,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
             end
             if var == true
                 (nb_available(str) != 0 && !parenvar) || error("invalid interpolation syntax at $j")
-                push!(sexpr.args, Expr(:call,:string,esc(
-                    @compat(Symbol(String(take!(str))))
-                )))
+                push!(sexpr.args, Expr(:call,:string,esc(Symbol(String(take!(str))))))
             else
                 nb_available(str) != 0 && push!(sexpr.args, String(take!(str)))
             end
@@ -705,14 +701,14 @@ end
 isroot(pd::ETree) = (pd.parent == pd)
 
 immutable XPath{T<:AbstractString,
-                returntype <: @compat(Union{Vector{ETree},
+                returntype <: Union{Vector{ETree},
                       Vector{AbstractString},
                       Vector{Any},
                       Bool,
                       Number,
                       Int,
                       AbstractString,
-                      Any})}
+                      Any}}
     # an XPath filter is a series of XPath segments implemented as
     # (:cmd, data) pairs. For example,
     # "//A/..//*[2]" should be parsed as:
@@ -768,14 +764,14 @@ function xpath_combined_checked(pd1::XPath, pd2::XPath)
     return (filt, xp)
 end
 |{T,S}(pd1::XPath{T}, pd2::XPath{S}) =
-    XPath{@compat(Union{T,S}),Any}( xpath_combined_checked(pd1,pd2) )
+    XPath{Union{T,S},Any}( xpath_combined_checked(pd1,pd2) )
 |{T,S,ret1<:Vector,ret2<:Vector}(pd1::XPath{T,ret1}, pd2::XPath{S,ret2}) =
-    XPath{@compat(Union{T,S}),Vector{Any}}( xpath_combined_checked(pd1,pd2) )
+    XPath{Union{T,S},Vector{Any}}( xpath_combined_checked(pd1,pd2) )
 |{T,S,ret<:Vector}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
-    XPath{@compat(Union{T,S}),ret}( xpath_combined_checked(pd1,pd2) )
+    XPath{Union{T,S},ret}( xpath_combined_checked(pd1,pd2) )
 |{T,S,ret}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
-    XPath{@compat(Union{T,S}),ret}( xpath_combined_checked(pd1,pd2) )
-#*{T,S,ret}(pd::XPath{T,ret}, filters::S) = XPath{@compat(Union{T,S}),ret}( ??? )
+    XPath{Union{T,S},ret}( xpath_combined_checked(pd1,pd2) )
+#*{T,S,ret}(pd::XPath{T,ret}, filters::S) = XPath{Union{T,S},ret}( ??? )
 
 
 xpath_boolean(a::Bool) = a
@@ -847,7 +843,7 @@ function xpath_translate(a::AbstractString,b::AbstractString,c::AbstractString)
     String(take!(tr))
 end
 
-function xpath_expr{T<:AbstractString}(pd, xp::XPath{T}, filter::@compat(Tuple{Symbol,ANY}), position::Int, last::Int, output_hint::DataType)
+function xpath_expr{T<:AbstractString}(pd, xp::XPath{T}, filter::Tuple{Symbol,ANY}, position::Int, last::Int, output_hint::DataType)
     op = filter[1]::Symbol
     args = filter[2]
     if op == :attribute

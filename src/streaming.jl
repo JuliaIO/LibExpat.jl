@@ -57,7 +57,7 @@ cb_streaming_end_cdata = cfunction(streaming_end_cdata, Void, (Ptr{Void},))
 function streaming_cdata(p_cbs::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
-    txt = unsafe_string(s, @compat(Int(len)))
+    txt = unsafe_string(s, Int(len))
 
     @DBG_PRINT("Found CData : " * txt)
     h.cbs.character_data(h, txt)
