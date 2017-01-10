@@ -1,5 +1,5 @@
 macro c(ret_type, func, arg_types, lib)
-  local args_in = Any[@compat Symbol(string('a',x)) for x in 1:length(arg_types.args) ]
+  local args_in = Any[Symbol(string('a',x)) for x in 1:length(arg_types.args)]
   quote
     $(esc(func))($(args_in...)) = ccall( ($(string(func)), $(esc(lib))), $(esc(ret_type)), $(esc(arg_types)), $(args_in...) )
   end
