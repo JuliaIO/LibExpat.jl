@@ -414,7 +414,7 @@ function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismac
     #end
     if '0' <= xpath[i] <= '9' || xpath[i] == '-'
         # parse token as a number
-        num = parsefloat(xpath[i:j])
+        num = parse(Float64,xpath[i:j])
         fn = @xpath_fn :number num
         returntype = Number
     elseif xpath[i] == '"' || xpath[i] == '\''
@@ -784,7 +784,7 @@ xpath_boolean(a::ETree) = true
 xpath_number(a::Bool) = a?1:0
 xpath_number(a::Int) = a
 xpath_number(a::Float64) = a
-xpath_number(a::AbstractString) = try parsefloat(a) catch ex NaN end
+xpath_number(a::AbstractString) = try parse(Float64,a) catch ex NaN end
 xpath_number(a::Vector) = xpath_number(xpath_string(a))
 xpath_number(a::ETree) = xpath_number(xpath_string(a))
 
@@ -796,7 +796,7 @@ function xpath_string(a::Float64)
     elseif isinf(a)
         return (a<0? "-Infinity" : "Infinity")
     elseif isinteger(a)
-        return string(int(a))
+        return string(Int(a))
     else
         return string(a)
     end
@@ -1066,9 +1066,9 @@ function xpath_expr{T<:AbstractString}(pd, xp::XPath{T}, filter::Tuple{Symbol,AN
         end
     elseif op == :substring
         a = xpath_string(xpath_expr(pd, xp, args[1]::SymbolAny, position, last, Any))::AbstractString
-        b = int(xpath_number(xpath_expr(pd, xp, args[2]::SymbolAny, position, last, Any)))::Int
+        b = parse(Int, xpath_number(xpath_expr(pd, xp, args[2]::SymbolAny, position, last, Any)))::Int
         if length(args) > 2
-            c = int(xpath_number(xpath_expr(pd, xp, args[3]::SymbolAny, position, last, Any)))::Int
+            c = parse(Int, xpath_number(xpath_expr(pd, xp, args[3]::SymbolAny, position, last, Any)))::Int
             return a[chr2ind(a,b):chr2ind(a,c)]
         else
             return a[chr2ind(a,b):end]
