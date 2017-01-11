@@ -49,7 +49,7 @@ function streaming_end_cdata(p_cbs::Ptr{Void})
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
     h.cbs.end_cdata(h)
-    return;
+    return
 end
 cb_streaming_end_cdata = cfunction(streaming_end_cdata, Void, (Ptr{Void},))
 
@@ -62,7 +62,7 @@ function streaming_cdata(p_cbs::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     @DBG_PRINT("Found CData : " * txt)
     h.cbs.character_data(h, txt)
 
-    return;
+    return
 end
 cb_streaming_cdata = cfunction(streaming_cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
@@ -82,7 +82,7 @@ cb_streaming_start_element = cfunction(streaming_start_element, Void, (Ptr{Void}
 function streaming_end_element(p_h::Ptr{Void}, name::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt::AbstractString = unsafe_string(name)
-    @DBG_PRINT("End element: $txt, current element: $(xph.pdata.name) ")
+    @DBG_PRINT("End element: $txt")
 
     h.cbs.end_element(h, txt)
 
@@ -109,7 +109,7 @@ function streaming_default(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
 
     h.cbs.default(h, txt)
 
-    return;
+    return
 end
 cb_streaming_default = cfunction(streaming_default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
@@ -121,7 +121,7 @@ function streaming_default_expand(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
 
     h.cbs.default_expand(h, txt)
 
-    return;
+    return
 end
 cb_streaming_default_expand = cfunction(streaming_default_expand, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
@@ -134,7 +134,7 @@ function streaming_start_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{
 
     h.cbs.start_namespace(h, prefix, uri)
 
-    return;
+    return
 end
 cb_streaming_start_namespace = cfunction(streaming_start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr{UInt8}))
 
@@ -146,7 +146,7 @@ function streaming_end_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8})
 
     h.cbs.end_namespace(h, prefix)
 
-    return;
+    return
 end
 cb_streaming_end_namespace = cfunction(streaming_end_namespace, Void, (Ptr{Void},Ptr{UInt8}))
 
@@ -215,7 +215,7 @@ function parsefile(filename::AbstractString,callbacks::XPCallbacks; bufferlines=
                 write(io, readline(file))
                 i += 1
             end
-            txt = Compat.String(io)
+            txt = String(io)
             rc = XML_Parse(h.parser, txt, sizeof(txt), 0)
             if (rc != XML_STATUS_OK) && (XML_GetErrorCode(h.parser) != XML_ERROR_ABORTED)
                 # Do not fail if the user aborted the parsing
