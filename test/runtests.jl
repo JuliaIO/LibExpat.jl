@@ -74,12 +74,12 @@ println("PASSED 12.1")
 println("PASSED 12.2")
 
 pd = xp_parse(open(readstring, joinpath(DATADIR,"utf8.xml")))
-@test isa(pd, ParsedData)
+@test isa(pd, ETree)
 println("PASSED 13")
 
 
 pd = xp_parse(open(readstring, joinpath(DATADIR,"wiki.xml")))
-@test isa(pd, ParsedData)
+@test isa(pd, ETree)
 ret = LibExpat.find(pd, "/page/revision/id#string")
 @test ret == "557462847"
 println("PASSED 14")
