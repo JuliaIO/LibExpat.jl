@@ -18,16 +18,6 @@ include("lX_expat_h.jl")
 export ETree, xp_parse, xpath, @xpath_str
 export ParsedData # deprecated
 
-const DEBUG = false
-
-macro DBG_PRINT(s)
-    quote
-        if (DEBUG)
-            println($(esc(s)))
-        end
-    end
-end
-
 type ETree
     # XML Tag
     name::AbstractString
@@ -121,9 +111,6 @@ function xp_geterror(p::Union{XML_Parser,Void})
     ec = XML_GetErrorCode(p)
 
     if ec != 0
-        @DBG_PRINT(XML_GetErrorCode(p))
-        @DBG_PRINT(unsafe_string(XML_ErrorString(XML_GetErrorCode(p))))
-
         return ( unsafe_string(XML_ErrorString(XML_GetErrorCode(p))),
                 XML_GetCurrentLineNumber(p),
                 XML_GetCurrentColumnNumber(p) + 1,
@@ -148,7 +135,6 @@ end
 
 function start_cdata(p_xph::Ptr{Void})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    @DBG_PRINT("Found StartCdata")
     xph.in_cdata = true
     return
 end
@@ -156,7 +142,6 @@ cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
 
 function end_cdata(p_xph::Ptr{Void})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
-    @DBG_PRINT("Found EndCdata")
     xph.in_cdata = false
     return
 end
@@ -169,7 +154,6 @@ function cdata(p_xph::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     txt = unsafe_string(s, Int(len))
     push!(xph.pdata.elements, txt)
 
-    @DBG_PRINT("Found CData : " * txt)
     return
 end
 cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
@@ -178,7 +162,6 @@ cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 function comment(p_xph::Ptr{Void}, data::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = unsafe_string(data)
-    @DBG_PRINT("Found comment : " * txt)
     return
 end
 cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{UInt8}))
@@ -187,7 +170,6 @@ cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{UInt8}))
 function default(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = unsafe_string(data)
-    @DBG_PRINT("Default : " * txt)
     return
 end
 cb_default = cfunction(default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
@@ -196,7 +178,6 @@ cb_default = cfunction(default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 function default_expand(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = unsafe_string(data)
-    @DBG_PRINT("Default Expand : " * txt)
     return
 end
 cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{UInt8}, Cint))
@@ -210,17 +191,15 @@ function attrs_in_to_dict(attrs_in::Ptr{Ptr{UInt8}})
         while (attr != C_NULL)
             k = unsafe_string(attr)
 
-            i=i+1
+            i += 1
             attr = unsafe_load(attrs_in, i)
 
             attr == C_NULL && error("Attribute does not have a name!")
             v = unsafe_string(attr)
 
             attrs[k] = v
-
-            @DBG_PRINT("attrs[$k] = $v")
-
-            i=i+1
+            
+            i += 1
             attr = unsafe_load(attrs_in, i)
         end
     end
@@ -231,13 +210,11 @@ end
 function start_element(p_xph::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     name = unsafe_string(name)
-    @DBG_PRINT("Start Elem name : $name,  current element: $(xph.pdata.name) ")
 
     new_elem = ETree(name)
     new_elem.parent = xph.pdata
 
     push!(xph.pdata.elements, new_elem)
-    @DBG_PRINT("Found  $name")
 
     merge!(new_elem.attr, attrs_in_to_dict(attrs_in))
     xph.pdata = new_elem
@@ -250,7 +227,6 @@ cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{UInt8}, Ptr{Ptr
 function end_element(p_xph::Ptr{Void}, name::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = unsafe_string(name)
-    @DBG_PRINT("End element: $txt, current element: $(xph.pdata.name) ")
 
     xph.pdata = xph.pdata.parent
 
@@ -263,7 +239,6 @@ function start_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = unsafe_string(prefix)
     uri = unsafe_string(uri)
-    @DBG_PRINT("start namespace prefix : $prefix, uri: $uri")
     return
 end
 cb_start_namespace = cfunction(start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr{UInt8}))
@@ -272,7 +247,6 @@ cb_start_namespace = cfunction(start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr
 function end_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = unsafe_string(prefix)
-    @DBG_PRINT("end namespace prefix : $prefix")
     return
 end
 cb_end_namespace = cfunction(end_namespace, Void, (Ptr{Void},Ptr{UInt8}))
@@ -295,10 +269,7 @@ function xp_parse(txt::AbstractString)
         return xph.pdata.elements[1]
     catch e
         stre = string(e)
-        @show e
         (err, line, column, pos) = xp_geterror(xph)
-        @show err
-        @DBG_PRINT("$e, $err, $line, $column, $pos")
         rethrow("$e, $err, $line, $column, $pos")
 
     finally
