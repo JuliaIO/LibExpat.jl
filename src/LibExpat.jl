@@ -10,13 +10,17 @@ if is_windows()
 elseif is_unix() 
     const libexpat = "libexpat"
 end
+
 include("lX_common_h.jl")
 include("lX_defines_h.jl")
 include("lX_expat_h.jl")
 #include("lX_exports_h.jl")
 
 export ETree, xp_parse, xpath, @xpath_str
-export ParsedData # deprecated
+
+# streaming
+export XPCallbacks, XPStreamHandler,
+       parse, stop, pause, resume, free, parsefile
 
 type ETree
     # XML Tag
@@ -37,7 +41,8 @@ type ETree
         pd
     end
 end
-typealias ParsedData ETree
+
+Base.@deprecate_binding ParsedData ETree
 
 function show(io::IO, pd::ETree)
     print(io,'<',pd.name)
@@ -376,7 +381,5 @@ end
 include("xpath.jl")
 
 include("streaming.jl")
-export XPCallbacks, XPStreamHandler
-export parse, stop, pause, resume, free, parsefile
 
 end
