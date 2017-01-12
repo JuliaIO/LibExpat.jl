@@ -298,7 +298,7 @@ function find{T<:AbstractString}(pd::ETree, path::T)
         end
     end
 
-    xp= Array{Tuple{Symbol,Any}}(0)
+    xp= Array(Tuple{Symbol,Any},0)
     if path[1] == '/'
         # This will treat the incoming pd as the root of the tree
         push!(xp, (:root,:element))

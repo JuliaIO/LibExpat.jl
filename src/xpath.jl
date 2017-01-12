@@ -141,9 +141,9 @@ end
 
 function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
     if ismacro
-        parsed = :(Array{SymbolAny}(0))
+        parsed = :(Array(SymbolAny, 0))
     else
-        parsed = Array{SymbolAny}(0)
+        parsed = Array(SymbolAny, 0)
     end
     k = consume_whitespace(xpath, k)
     if done(xpath,k)
@@ -321,9 +321,9 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
                     #error("xpath return types on either side of | don't appear to match")
                 end
                 if ismacro
-                    parsed = :( push!(Array{SymbolAny}(0), (:(|), ($(parsed), $(parsed2)))) )
+                    parsed = :( push!(Array(SymbolAny, 0), (:(|), ($(parsed), $(parsed2)))) )
                 else
-                    parsed = push!(Array{SymbolAny}(0), (:(|), (parsed, parsed2)))
+                    parsed = push!(Array(SymbolAny, 0), (:(|), (parsed, parsed2)))
                 end
                 return k, parsed, returntype
             elseif c == '['
@@ -654,9 +654,9 @@ function consume_function(xpath, k, name, ismacro)
     maxargs = fntype[3]::Int
     fnreturntype = fntype[4]::DataType
     if ismacro
-        args = :(Array{SymbolAny}(0))
+        args = :(Array(SymbolAny, 0))
     else
-        args = Array{SymbolAny}(0)
+        args = Array(SymbolAny, 0)
     end
 
     c, k2 = next(xpath,k)
@@ -729,7 +729,7 @@ end
 xpath{T<:AbstractString}(filter::T) = (xp = xpath_parse(filter); XPath{T,xp[2]}(xp[1]))
 
 function xpath{T,returntype}(pd::Vector, xp::XPath{T,Vector{returntype}})
-    output = Array{returntype}(0)
+    output = Array(returntype,0)
     for ele in pd
         add = xpath_expr(ele, xp, xp.filter, 1, -1, Vector{returntype})::Vector{returntype}
         output = append!(output, setdiff(add, output))
@@ -737,7 +737,7 @@ function xpath{T,returntype}(pd::Vector, xp::XPath{T,Vector{returntype}})
     return output::Vector{returntype}
 end
 function xpath{T,returntype}(pd::Vector, xp::XPath{T,returntype})
-    output = Array{returntype}(0)
+    output = Array(returntype,0)
     for ele in pd
         push!(output, xpath_expr(pd, xp, xp.filter, 1, -1, returntype)::returntype)
     end
@@ -758,7 +758,7 @@ function xpath_combined_checked(pd1::XPath, pd2::XPath)
         end
         filt = :xpath_any
     end
-    xp = Array{SymbolAny}(0)
+    xp = Array(SymbolAny, 0)
     push!(xp, (:(|),(pd1.filter[2], pd2.filter[2])))
     return (filt, xp)
 end
