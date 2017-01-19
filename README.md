@@ -4,7 +4,7 @@ LibExpat - Julia wrapper for libexpat
 [![LibExpat](http://pkg.julialang.org/badges/LibExpat_0.4.svg)](http://pkg.julialang.org/?pkg=LibExpat)
 [![LibExpat](http://pkg.julialang.org/badges/LibExpat_0.5.svg)](http://pkg.julialang.org/?pkg=LibExpat)
 [![Build Status](https://travis-ci.org/JuliaIO/LibExpat.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/LibExpat.jl)
-[![Coverage Status](https://coveralls.io/repos/amitmurthy/LibExpat.jl/badge.svg?branch=master)](https://coveralls.io/r/amitmurthy/LibExpat.jl?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/JuliaIO/LibExpat.jl/badge.svg)](https://coveralls.io/github/JuliaIO/LibExpat.jl)
 
 Usage
 =====
