@@ -59,8 +59,8 @@
 @c Int32 XML_GetCurrentByteCount (XML_Parser,) libexpat
 @c Ptr{UInt8} XML_GetInputContext (XML_Parser, Ptr{Int32}, Ptr{Int32}) libexpat
 @c Void XML_FreeContentModel (XML_Parser, Ptr{XML_Content}) libexpat
-@c Ptr{Void} XML_MemMalloc (XML_Parser, size_t) libexpat
-@c Ptr{Void} XML_MemRealloc (XML_Parser, Ptr{Void}, size_t) libexpat
+@c Ptr{Void} XML_MemMalloc (XML_Parser, Csize_t) libexpat
+@c Ptr{Void} XML_MemRealloc (XML_Parser, Ptr{Void}, Csize_t) libexpat
 @c Void XML_MemFree (XML_Parser, Ptr{Void}) libexpat
 @c Void XML_ParserFree (XML_Parser,) libexpat
 @c Ptr{XML_LChar} XML_ErrorString (Cint,) libexpat
