@@ -7,7 +7,7 @@ end
 
 macro ctypedef(fake_t,real_t)
   quote
-    typealias $(esc(fake_t)) $(esc(real_t))
+    const $(esc(fake_t)) = $(esc(real_t))
   end
 end
 
