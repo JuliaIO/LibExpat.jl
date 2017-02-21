@@ -1,14 +1,14 @@
 macro c(ret_type, func, arg_types, lib)
-  local args_in = Any[Symbol(string('a',x)) for x in 1:length(arg_types.args)]
-  quote
-    $(esc(func))($(args_in...)) = ccall( ($(string(func)), $(esc(lib))), $(esc(ret_type)), $(esc(arg_types)), $(args_in...) )
-  end
+    local args_in = Any[Symbol(string('a',x)) for x in 1:length(arg_types.args)]
+    quote
+      $(esc(func))($(args_in...)) = ccall( ($(string(func)), $(esc(lib))), $(esc(ret_type)), $(esc(arg_types)), $(args_in...) )
+    end
 end
 
 macro ctypedef(fake_t,real_t)
-  quote
-    const $(esc(fake_t)) = $(esc(real_t))
-  end
+    quote
+      const $(esc(fake_t)) = $(esc(real_t))
+    end
 end
 
 @ctypedef XML_Char UInt8
@@ -84,9 +84,9 @@ const XML_CQUANT_PLUS = 3
 @ctypedef XML_AttlistDeclHandler Ptr{Void}
 @ctypedef XML_XmlDeclHandler Ptr{Void}
 type XML_Memory_Handling_Suite
-  malloc_fcn::Ptr{Void}
-  realloc_fcn::Ptr{Void}
-  free_fcn::Ptr{Void}
+    malloc_fcn::Ptr{Void}
+    realloc_fcn::Ptr{Void}
+    free_fcn::Ptr{Void}
 end
 @ctypedef XML_StartElementHandler Ptr{Void}
 @ctypedef XML_EndElementHandler Ptr{Void}
@@ -107,10 +107,10 @@ end
 @ctypedef XML_ExternalEntityRefHandler Ptr{Void}
 @ctypedef XML_SkippedEntityHandler Ptr{Void}
 type XML_Encoding
-  map::Void
-  data::Ptr{Void}
-  convert::Ptr{Void}
-  release::Ptr{Void}
+    map::Void
+    data::Ptr{Void}
+    convert::Ptr{Void}
+    release::Ptr{Void}
 end
 @ctypedef XML_UnknownEncodingHandler Ptr{Void}
 # enum XML_Parsing
@@ -129,9 +129,9 @@ const XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE = 1
 const XML_PARAM_ENTITY_PARSING_ALWAYS = 2
 # end
 type XML_Expat_Version
-  major::Int32
-  minor::Int32
-  micro::Int32
+    major::Int32
+    minor::Int32
+    micro::Int32
 end
 # enum XML_FeatureEnum
 const XML_FEATURE_END = 0
@@ -147,7 +147,7 @@ const XML_FEATURE_LARGE_SIZE = 9
 const XML_FEATURE_ATTR_INFO = 10
 # end
 type XML_Feature
-  feature::Int32
-  name::Ptr{XML_LChar}
-  value::Int32
+    feature::Int32
+    name::Ptr{XML_LChar}
+    value::Int32
 end
