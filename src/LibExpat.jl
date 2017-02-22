@@ -22,7 +22,7 @@ export ETree, xp_parse, xpath, @xpath_str
 export XPCallbacks, XPStreamHandler,
        parse, stop, pause, resume, free, parsefile
 
-typealias SymbolAny Tuple{Symbol,Any}
+const SymbolAny = Tuple{Symbol,Any}
 
 type ETree
     # XML Tag
