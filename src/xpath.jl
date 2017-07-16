@@ -840,7 +840,7 @@ function xpath_translate(a::AbstractString,b::AbstractString,c::AbstractString)
     String(take!(tr))
 end
 
-function xpath_expr{T<:AbstractString,H}(pd, xp::XPath{T}, filter::Tuple{Symbol,H}, position::Int, last::Int, output_hint::DataType)
+function xpath_expr{T<:AbstractString}(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, last::Int, output_hint::DataType)
     op = filter[1]::Symbol
     args = filter[2]
     if op == :attribute
