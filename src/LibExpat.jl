@@ -6,7 +6,7 @@ import Base: getindex, show, parse
 
 if Compat.Sys.iswindows() 
     const libexpat = "libexpat-1"
-elseif Compat.Sys.islinux() 
+elseif Compat.Sys.isunix() 
     const libexpat = "libexpat"
 end
 
