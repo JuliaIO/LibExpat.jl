@@ -2,7 +2,7 @@ using LibExpat
 using Base.Test
 using Compat
 
-const DATADIR = joinpath(dirname(@__FILE__), "data")
+const DATADIR = joinpath(@__DIR__, "data")
 
 pd = xp_parse(open(readstring, joinpath(DATADIR,"t_s1.txt")))
 @test isa(pd, ETree)
