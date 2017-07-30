@@ -90,6 +90,7 @@ function streaming_comment(p_h::Ptr{Void}, data::Ptr{UInt8})
     return
 end
 
+
 function streaming_default(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = unsafe_string(data)
