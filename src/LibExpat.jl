@@ -165,6 +165,7 @@ function end_cdata(p_xph::Ptr{Void})
     return
 end
 
+
 function cdata(p_xph::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
 
