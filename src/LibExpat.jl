@@ -90,16 +90,16 @@ end
 
 
 function xp_make_parser(sep='\0')
-    cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
-    cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
-    cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
-    cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{UInt8}))
-    cb_default = cfunction(default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
-    cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{UInt8}, Cint))
-    cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{UInt8}, Ptr{Ptr{UInt8}}))
-    cb_end_element = cfunction(end_element, Void, (Ptr{Void},Ptr{UInt8}))
-    cb_start_namespace = cfunction(start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr{UInt8}))
-    cb_end_namespace = cfunction(end_namespace, Void, (Ptr{Void},Ptr{UInt8}))
+    cb_start_cdata = cfunction(start_cdata, Void, Tuple{Ptr{Void}})
+    cb_end_cdata = cfunction(end_cdata, Void, Tuple{Ptr{Void}})
+    cb_cdata = cfunction(cdata, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+    cb_comment = cfunction(comment, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+    cb_default = cfunction(default, Void,  Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+    cb_default_expand = cfunction(default_expand, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+    cb_start_element = cfunction(start_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{Ptr{UInt8}}})
+    cb_end_element = cfunction(end_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+    cb_start_namespace = cfunction(start_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{UInt8}})
+    cb_end_namespace = cfunction(end_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
 
     p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
     if (p == C_NULL) error("XML_ParserCreate failed") end
