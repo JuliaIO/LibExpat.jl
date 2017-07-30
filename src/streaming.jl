@@ -137,16 +137,16 @@ end
 
 
 function make_parser(cbs::XPCallbacks,data=nothing,sep='\0')
-    cb_streaming_start_cdata = cfunction(streaming_start_cdata, Void, (Ptr{Void},))
-    cb_streaming_end_cdata = cfunction(streaming_end_cdata, Void, (Ptr{Void},))
-    cb_streaming_cdata = cfunction(streaming_cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
-    cb_streaming_comment = cfunction(streaming_comment, Void, (Ptr{Void},Ptr{UInt8}))
-    cb_streaming_default = cfunction(streaming_default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
-    cb_streaming_default_expand = cfunction(streaming_default_expand, Void, (Ptr{Void},Ptr{UInt8}, Cint))
-    cb_streaming_start_element = cfunction(streaming_start_element, Void, (Ptr{Void},Ptr{UInt8}, Ptr{Ptr{UInt8}}))
-    cb_streaming_end_element = cfunction(streaming_end_element, Void, (Ptr{Void},Ptr{UInt8}))
-    cb_streaming_start_namespace = cfunction(streaming_start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr{UInt8}))
-    cb_streaming_end_namespace = cfunction(streaming_end_namespace, Void, (Ptr{Void},Ptr{UInt8}))
+    cb_streaming_start_cdata = cfunction(streaming_start_cdata, Void, Tuple{Ptr{Void}})
+    cb_streaming_end_cdata = cfunction(streaming_end_cdata, Void, Tuple{Ptr{Void}})
+    cb_streaming_cdata = cfunction(streaming_cdata, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+    cb_streaming_comment = cfunction(streaming_comment, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+    cb_streaming_default = cfunction(streaming_default, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+    cb_streaming_default_expand = cfunction(streaming_default_expand, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+    cb_streaming_start_element = cfunction(streaming_start_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{Ptr{UInt8}}})
+    cb_streaming_end_element = cfunction(streaming_end_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+    cb_streaming_start_namespace = cfunction(streaming_start_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{UInt8}})
+    cb_streaming_end_namespace = cfunction(streaming_end_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
     
     p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
     if (p == C_NULL) error("XML_ParserCreate failed") end
