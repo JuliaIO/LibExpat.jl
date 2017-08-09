@@ -1,4 +1,4 @@
-type XPCallbacks
+mutable struct XPCallbacks
     start_cdata::Function
     end_cdata::Function
     comment::Function
@@ -12,7 +12,7 @@ type XPCallbacks
 end
 
 
-type XPStreamHandler{D}
+mutable struct XPStreamHandler{D}
     cbs::XPCallbacks
     parser::XML_Parser
     data::D
