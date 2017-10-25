@@ -6,9 +6,9 @@ using Compat
 
 import Base: getindex, show, parse
 
-if Compat.Sys.iswindows() 
+if Compat.Sys.iswindows()
     const libexpat = "libexpat-1"
-elseif Compat.Sys.isunix() 
+elseif Compat.Sys.isunix()
     const libexpat = "libexpat"
 end
 
@@ -17,7 +17,7 @@ include("lX_defines_h.jl")
 include("lX_expat_h.jl")
 #include("lX_exports_h.jl")
 
-export ETree, xp_parse, xpath, @xpath_str
+export ETree, xp_parse, xp_parse_ns, xpath, @xpath_str
 
 # streaming
 export XPCallbacks, XPStreamHandler,
@@ -178,7 +178,7 @@ function attrs_in_to_dict(attrs_in::Ptr{Ptr{UInt8}})
             v = unsafe_string(attr)
 
             attrs[k] = v
-            
+
             i += 1
             attr = unsafe_load(attrs_in, i)
         end
@@ -282,6 +282,7 @@ function xp_parse(p::XML_Parser, txt::AbstractString)
 end
 
 xp_parse(txt::AbstractString) = xp_parse(XML_ParserCreate(C_NULL), txt)
+xp_parse_ns(sep, txt::AbstractString) = xp_parse(XML_ParserCreateNS(C_NULL, sep), txt)
 
 function find{T<:AbstractString}(pd::ETree, path::T)
     # What are we looking for?
