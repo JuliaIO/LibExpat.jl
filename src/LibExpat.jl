@@ -44,6 +44,8 @@ type ETree
         pd
     end
 end
+# The root element will only have a single child element in a well formed XML
+root(pd::ETree) = pd.elements[1]
 
 Base.@deprecate_binding ParsedData ETree
 
