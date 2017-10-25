@@ -90,42 +90,7 @@ type XPHandle
   XPHandle(p) = new(p, ETree(""), false)
 end
 
-
-function xp_make_parser(sep='\0')
-    cb_start_cdata = cfunction(start_cdata, Void, Tuple{Ptr{Void}})
-    cb_end_cdata = cfunction(end_cdata, Void, Tuple{Ptr{Void}})
-    cb_cdata = cfunction(cdata, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
-    cb_comment = cfunction(comment, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
-    cb_default = cfunction(default, Void,  Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
-    cb_default_expand = cfunction(default_expand, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
-    cb_start_element = cfunction(start_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{Ptr{UInt8}}})
-    cb_end_element = cfunction(end_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
-    cb_start_namespace = cfunction(start_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{UInt8}})
-    cb_end_namespace = cfunction(end_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
-
-    p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
-    if (p == C_NULL) error("XML_ParserCreate failed") end
-
-    xph = XPHandle(p)
-    p_xph = pointer_from_objref(xph)
-    XML_SetUserData(p, p_xph);
-
-    XML_SetCdataSectionHandler(p, cb_start_cdata, cb_end_cdata)
-    XML_SetCharacterDataHandler(p, cb_cdata)
-    XML_SetCommentHandler(p, cb_comment)
-    XML_SetDefaultHandler(p, cb_default)
-    XML_SetDefaultHandlerExpand(p, cb_default_expand)
-    XML_SetElementHandler(p, cb_start_element, cb_end_element)
-#    XML_SetExternalEntityRefHandler(p, f_ExternaEntity)
-    XML_SetNamespaceDeclHandler(p, cb_start_namespace, cb_end_namespace)
-#    XML_SetNotationDeclHandler(p, f_NotationDecl)
-#    XML_SetNotStandaloneHandler(p, f_NotStandalone)
-#    XML_SetProcessingInstructionHandler(p, f_ProcessingInstruction)
-#    XML_SetUnparsedEntityDeclHandler(p, f_UnparsedEntityDecl)
-#    XML_SetStartDoctypeDeclHandler(p, f_StartDoctypeDecl)
-
-    return xph
-end
+parsed_data(xph::XPHandle) = root(xph.pdata)
 
 
 function xp_geterror(p::Union{XML_Parser,Void})
@@ -267,27 +232,56 @@ end
 # SetBase and GetBase
 
 
+function xp_parse(xph::XPHandle, txt::AbstractString)
+  try
+    rc = XML_Parse(xph.parser, txt, sizeof(txt), 1)
+    (rc != XML_STATUS_OK) && error("Error parsing document : $rc")
 
-function xp_parse(txt::AbstractString)
-    xph = nothing
-    xph = xp_make_parser()
+    return parsed_data(xph)
+  catch e
+    stre = string(e)
+    (err, line, column, pos) = xp_geterror(xph)
+    rethrow("$e, $err, $line, $column, $pos")
 
-    try
-        rc = XML_Parse(xph.parser, txt, sizeof(txt), 1)
-        (rc != XML_STATUS_OK) && error("Error parsing document : $rc")
-
-        # The root element will only have a single child element in a well formed XML
-        return xph.pdata.elements[1]
-    catch e
-        stre = string(e)
-        (err, line, column, pos) = xp_geterror(xph)
-        rethrow("$e, $err, $line, $column, $pos")
-
-    finally
-        (xph != nothing) && xp_close(xph)
-    end
+  finally
+    xp_close(xph)
+  end
 end
 
+function xp_parse(p::XML_Parser, txt::AbstractString)
+  cb_start_cdata = cfunction(start_cdata, Void, Tuple{Ptr{Void}})
+  cb_end_cdata = cfunction(end_cdata, Void, Tuple{Ptr{Void}})
+  cb_cdata = cfunction(cdata, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+  cb_comment = cfunction(comment, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+  cb_default = cfunction(default, Void,  Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+  cb_default_expand = cfunction(default_expand, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+  cb_start_element = cfunction(start_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{Ptr{UInt8}}})
+  cb_end_element = cfunction(end_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+  cb_start_namespace = cfunction(start_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{UInt8}})
+  cb_end_namespace = cfunction(end_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+
+  xph = XPHandle(p)
+  p_xph = pointer_from_objref(xph)
+  XML_SetUserData(p, p_xph);
+
+  XML_SetCdataSectionHandler(p, cb_start_cdata, cb_end_cdata)
+  XML_SetCharacterDataHandler(p, cb_cdata)
+  XML_SetCommentHandler(p, cb_comment)
+  XML_SetDefaultHandler(p, cb_default)
+  XML_SetDefaultHandlerExpand(p, cb_default_expand)
+  XML_SetElementHandler(p, cb_start_element, cb_end_element)
+#    XML_SetExternalEntityRefHandler(p, f_ExternaEntity)
+  XML_SetNamespaceDeclHandler(p, cb_start_namespace, cb_end_namespace)
+#    XML_SetNotationDeclHandler(p, f_NotationDecl)
+#    XML_SetNotStandaloneHandler(p, f_NotStandalone)
+#    XML_SetProcessingInstructionHandler(p, f_ProcessingInstruction)
+#    XML_SetUnparsedEntityDeclHandler(p, f_UnparsedEntityDecl)
+#    XML_SetStartDoctypeDeclHandler(p, f_StartDoctypeDecl)
+
+  return xp_parse(xph, txt)
+end
+
+xp_parse(txt::AbstractString) = xp_parse(XML_ParserCreate(C_NULL), txt)
 
 function find{T<:AbstractString}(pd::ETree, path::T)
     # What are we looking for?
