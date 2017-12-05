@@ -1,13 +1,14 @@
+__precompile__()
+
 module LibExpat
 
 using Compat
-using Compat: String, unsafe_string
 
 import Base: getindex, show, parse
 
-if is_windows() 
+if Compat.Sys.iswindows() 
     const libexpat = "libexpat-1"
-elseif is_unix() 
+elseif Compat.Sys.isunix() 
     const libexpat = "libexpat"
 end
 
@@ -89,6 +90,17 @@ end
 
 
 function xp_make_parser(sep='\0')
+    cb_start_cdata = cfunction(start_cdata, Void, Tuple{Ptr{Void}})
+    cb_end_cdata = cfunction(end_cdata, Void, Tuple{Ptr{Void}})
+    cb_cdata = cfunction(cdata, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+    cb_comment = cfunction(comment, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+    cb_default = cfunction(default, Void,  Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+    cb_default_expand = cfunction(default_expand, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
+    cb_start_element = cfunction(start_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{Ptr{UInt8}}})
+    cb_end_element = cfunction(end_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+    cb_start_namespace = cfunction(start_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{UInt8}})
+    cb_end_namespace = cfunction(end_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+
     p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
     if (p == C_NULL) error("XML_ParserCreate failed") end
 
@@ -145,14 +157,12 @@ function start_cdata(p_xph::Ptr{Void})
     xph.in_cdata = true
     return
 end
-cb_start_cdata = cfunction(start_cdata, Void, (Ptr{Void},))
 
 function end_cdata(p_xph::Ptr{Void})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     xph.in_cdata = false
     return
 end
-cb_end_cdata = cfunction(end_cdata, Void, (Ptr{Void},))
 
 
 function cdata(p_xph::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
@@ -163,7 +173,6 @@ function cdata(p_xph::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
 
     return
 end
-cb_cdata = cfunction(cdata, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
 function comment(p_xph::Ptr{Void}, data::Ptr{UInt8})
@@ -171,7 +180,6 @@ function comment(p_xph::Ptr{Void}, data::Ptr{UInt8})
     txt = unsafe_string(data)
     return
 end
-cb_comment = cfunction(comment, Void, (Ptr{Void},Ptr{UInt8}))
 
 
 function default(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
@@ -179,7 +187,6 @@ function default(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     txt = unsafe_string(data)
     return
 end
-cb_default = cfunction(default, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 
 function default_expand(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
@@ -187,7 +194,6 @@ function default_expand(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
     txt = unsafe_string(data)
     return
 end
-cb_default_expand = cfunction(default_expand, Void, (Ptr{Void},Ptr{UInt8}, Cint))
 
 function attrs_in_to_dict(attrs_in::Ptr{Ptr{UInt8}})
     attrs = Dict{AbstractString,AbstractString}()
@@ -228,7 +234,6 @@ function start_element(p_xph::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UIn
 
     return
 end
-cb_start_element = cfunction(start_element, Void, (Ptr{Void},Ptr{UInt8}, Ptr{Ptr{UInt8}}))
 
 
 function end_element(p_xph::Ptr{Void}, name::Ptr{UInt8})
@@ -239,7 +244,6 @@ function end_element(p_xph::Ptr{Void}, name::Ptr{UInt8})
 
     return
 end
-cb_end_element = cfunction(end_element, Void, (Ptr{Void},Ptr{UInt8}))
 
 
 function start_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
@@ -248,7 +252,6 @@ function start_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
     uri = unsafe_string(uri)
     return
 end
-cb_start_namespace = cfunction(start_namespace, Void, (Ptr{Void},Ptr{UInt8}, Ptr{UInt8}))
 
 
 function end_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8})
@@ -256,7 +259,6 @@ function end_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8})
     prefix = unsafe_string(prefix)
     return
 end
-cb_end_namespace = cfunction(end_namespace, Void, (Ptr{Void},Ptr{UInt8}))
 
 
 # Unsupported callbacks: External Entity, NotationDecl, Not Stand Alone, Processing, UnparsedEntityDecl, StartDocType
