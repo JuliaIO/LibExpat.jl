@@ -778,7 +778,7 @@ xpath_boolean(a::AbstractString) = !isempty(a)
 xpath_boolean(a::Vector) = !isempty(a)
 xpath_boolean(a::ETree) = true
 
-xpath_number(a::Bool) = a?1:0
+xpath_number(a::Bool) = a ? 1 : 0
 xpath_number(a::Int) = a
 xpath_number(a::Float64) = a
 xpath_number(a::AbstractString) = try parse(Float64,a) catch ex NaN end
@@ -791,7 +791,7 @@ function xpath_string(a::Float64)
     if a == 0
         return "0"
     elseif isinf(a)
-        return (a<0? "-Infinity" : "Infinity")
+        return (a < 0 ? "-Infinity" : "Infinity")
     elseif isinteger(a)
         return string(Int(a))
     else
