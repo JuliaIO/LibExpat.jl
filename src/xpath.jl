@@ -791,7 +791,7 @@ function xpath_string(a::Float64)
     if a == 0
         return "0"
     elseif isinf(a)
-        return (a<0 ? "-Infinity" : "Infinity")
+        return (a < 0 ? "-Infinity" : "Infinity")
     elseif isinteger(a)
         return string(Int(a))
     else
