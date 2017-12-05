@@ -4,7 +4,7 @@ using Compat
 
 const DATADIR = joinpath(@__DIR__, "data")
 
-pd = xp_parse(open(readstring, joinpath(DATADIR,"t_s1.txt")))
+pd = xp_parse(open(f -> read(f, String), joinpath(DATADIR,"t_s1.txt")))
 @test isa(pd, ETree)
 println("PASSED 1")
 
