@@ -84,7 +84,7 @@ end
 
 const xpath_separators = Set(['+','(',')','[',']','<','>','!','=','|','/','*',','])
 
-function xpath_parse{T<:AbstractString}(xpath::T, ismacro=false)
+function xpath_parse(xpath::T, ismacro=false) where T<:AbstractString
     k = start(xpath)
     k, parsed, returntype, has_last_fn = xpath_parse_expr(xpath, k, 0, ismacro)
     if !done(xpath,k)
@@ -137,7 +137,7 @@ macro xpath_fn(arg1, arg2)
     )
 end
 
-function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
+function xpath_parse(xpath::T, k, ismacro) where T<:AbstractString
     if ismacro
         parsed = :(SymbolAny[])
     else
@@ -353,7 +353,7 @@ function xpath_parse{T<:AbstractString}(xpath::T, k, ismacro)
     return k, parsed, returntype
 end # function
 
-function xpath_parse_expr{T<:AbstractString}(xpath::T, k, precedence::Int, ismacro)
+function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:AbstractString
     i = k = consume_whitespace(xpath, k)
     j = 0
     prevtokenspecial = true
@@ -697,7 +697,7 @@ end
 
 isroot(pd::ETree) = (pd.parent == pd)
 
-immutable XPath{T<:AbstractString,
+struct XPath{T<:AbstractString,
                 returntype <: Union{Vector{ETree},
                       Vector{AbstractString},
                       Vector{Any},
@@ -715,7 +715,7 @@ immutable XPath{T<:AbstractString,
     filter::SymbolAny
 end
 
-type XPath_Collector
+mutable struct XPath_Collector
     nodes::Vector{ETree}
     filter::Any
     index::Int
@@ -724,9 +724,9 @@ type XPath_Collector
     end
 end
 
-xpath{T<:AbstractString}(filter::T) = (xp = xpath_parse(filter); XPath{T,xp[2]}(xp[1]))
+xpath(filter::T) where {T<:AbstractString} = (xp = xpath_parse(filter); XPath{T,xp[2]}(xp[1]))
 
-function xpath{T,returntype}(pd::Vector, xp::XPath{T,Vector{returntype}})
+function xpath(pd::Vector, xp::XPath{T,Vector{returntype}}) where {T,returntype}
     output = returntype[]
     for ele in pd
         add = xpath_expr(ele, xp, xp.filter, 1, -1, Vector{returntype})::Vector{returntype}
@@ -734,15 +734,15 @@ function xpath{T,returntype}(pd::Vector, xp::XPath{T,Vector{returntype}})
     end
     return output::Vector{returntype}
 end
-function xpath{T,returntype}(pd::Vector, xp::XPath{T,returntype})
+function xpath(pd::Vector, xp::XPath{T,returntype}) where {T,returntype}
     output = returntype[]
     for ele in pd
         push!(output, xpath_expr(pd, xp, xp.filter, 1, -1, returntype)::returntype)
     end
     return output
 end
-xpath{T,returntype}(pd, xp::XPath{T,returntype}) = xpath_expr(pd, xp, xp.filter, 1, -1, returntype)::returntype
-xpath{T<:AbstractString}(pd, filter::T) = xpath(pd, xpath(filter))
+xpath(pd, xp::XPath{T,returntype}) where {T,returntype} = xpath_expr(pd, xp, xp.filter, 1, -1, returntype)::returntype
+xpath(pd, filter::T) where {T<:AbstractString} = xpath(pd, xpath(filter))
 
 function xpath_combined_checked(pd1::XPath, pd2::XPath)
     a1 = pd1.filter[1]
@@ -760,13 +760,13 @@ function xpath_combined_checked(pd1::XPath, pd2::XPath)
     push!(xp, (:(|),(pd1.filter[2], pd2.filter[2])))
     return (filt, xp)
 end
-|{T,S}(pd1::XPath{T}, pd2::XPath{S}) =
+|(pd1::XPath{T}, pd2::XPath{S}) where {T,S} =
     XPath{Union{T,S},Any}( xpath_combined_checked(pd1,pd2) )
-|{T,S,ret1<:Vector,ret2<:Vector}(pd1::XPath{T,ret1}, pd2::XPath{S,ret2}) =
+|(pd1::XPath{T,ret1}, pd2::XPath{S,ret2}) where {T,S,ret1<:Vector,ret2<:Vector} =
     XPath{Union{T,S},Vector{Any}}( xpath_combined_checked(pd1,pd2) )
-|{T,S,ret<:Vector}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
+|(pd1::XPath{T,ret}, pd2::XPath{S,ret}) where {T,S,ret<:Vector} =
     XPath{Union{T,S},ret}( xpath_combined_checked(pd1,pd2) )
-|{T,S,ret}(pd1::XPath{T,ret}, pd2::XPath{S,ret}) =
+|(pd1::XPath{T,ret}, pd2::XPath{S,ret}) where {T,S,ret} =
     XPath{Union{T,S},ret}( xpath_combined_checked(pd1,pd2) )
 #*{T,S,ret}(pd::XPath{T,ret}, filters::S) = XPath{Union{T,S},ret}( ??? )
 
@@ -791,7 +791,7 @@ function xpath_string(a::Float64)
     if a == 0
         return "0"
     elseif isinf(a)
-        return (a < 0 ?  "-Infinity" : "Infinity")
+        return (a < 0 ? "-Infinity" : "Infinity")
     elseif isinteger(a)
         return string(Int(a))
     else
@@ -840,7 +840,7 @@ function xpath_translate(a::AbstractString,b::AbstractString,c::AbstractString)
     String(take!(tr))
 end
 
-function xpath_expr{T<:AbstractString}(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, last::Int, output_hint::DataType)
+function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, last::Int, output_hint::DataType) where T<:AbstractString
     op = filter[1]::Symbol
     args = filter[2]
     if op == :attribute
@@ -1153,7 +1153,7 @@ end
 macro xpath_descendant(node)
     esc( :( iscounted |= xpath_descendant($(node), name::Symbol, xp, filter, index, position, position_index, collector, output) ) )
 end
-function xpath{T<:AbstractString}(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vector{SymbolAny}, index::Int, position::Vector{Int}, position_index::Int, collector::XPath_Collector, output)
+function xpath(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vector{SymbolAny}, index::Int, position::Vector{Int}, position_index::Int, collector::XPath_Collector, output) where T<:AbstractString
     #return value is whether the node is "true" for the input to a boolean function
     #implements axes: child, descendant, parent, ancestor, self, root, descendant-or-self, ancestor-or-self
     #implements filters: name
