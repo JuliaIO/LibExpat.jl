@@ -1,4 +1,4 @@
-type XPCallbacks
+mutable struct XPCallbacks
     start_cdata::Function
     end_cdata::Function
     comment::Function
@@ -12,7 +12,7 @@ type XPCallbacks
 end
 
 
-type XPStreamHandler{D}
+mutable struct XPStreamHandler{D}
     cbs::XPCallbacks
     parser::XML_Parser
     data::D
@@ -207,7 +207,7 @@ function parsefile(filename::AbstractString,callbacks::XPCallbacks; bufferlines=
                 write(io, readline(file))
                 i += 1
             end
-            txt = String(io)
+            txt = String(take!(copy(io)))
             rc = XML_Parse(h.parser, txt, sizeof(txt), 0)
             if (rc != XML_STATUS_OK) && (XML_GetErrorCode(h.parser) != XML_ERROR_ABORTED)
                 # Do not fail if the user aborted the parsing

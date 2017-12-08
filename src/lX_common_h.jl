@@ -83,7 +83,7 @@ const XML_CQUANT_PLUS = 3
 @ctypedef XML_ElementDeclHandler Ptr{Void}
 @ctypedef XML_AttlistDeclHandler Ptr{Void}
 @ctypedef XML_XmlDeclHandler Ptr{Void}
-type XML_Memory_Handling_Suite
+mutable struct XML_Memory_Handling_Suite
     malloc_fcn::Ptr{Void}
     realloc_fcn::Ptr{Void}
     free_fcn::Ptr{Void}
@@ -106,7 +106,7 @@ end
 @ctypedef XML_NotStandaloneHandler Ptr{Void}
 @ctypedef XML_ExternalEntityRefHandler Ptr{Void}
 @ctypedef XML_SkippedEntityHandler Ptr{Void}
-type XML_Encoding
+mutable struct XML_Encoding
     map::Void
     data::Ptr{Void}
     convert::Ptr{Void}
@@ -119,7 +119,7 @@ const XML_PARSING = 1
 const XML_FINISHED = 2
 const XML_SUSPENDED = 3
 # end
-type XML_ParsingStatus
+mutable struct XML_ParsingStatus
   parsing::Int32
   finalBuffer::XML_Bool
 end
@@ -128,7 +128,7 @@ const XML_PARAM_ENTITY_PARSING_NEVER = 0
 const XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE = 1
 const XML_PARAM_ENTITY_PARSING_ALWAYS = 2
 # end
-type XML_Expat_Version
+mutable struct XML_Expat_Version
     major::Int32
     minor::Int32
     micro::Int32
@@ -146,7 +146,7 @@ const XML_FEATURE_NS = 8
 const XML_FEATURE_LARGE_SIZE = 9
 const XML_FEATURE_ATTR_INFO = 10
 # end
-type XML_Feature
+mutable struct XML_Feature
     feature::Int32
     name::Ptr{XML_LChar}
     value::Int32

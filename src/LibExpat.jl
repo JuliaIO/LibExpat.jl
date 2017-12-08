@@ -25,7 +25,7 @@ export XPCallbacks, XPStreamHandler,
 
 const SymbolAny = Tuple{Symbol,Any}
 
-type ETree
+mutable struct ETree
     # XML Tag
     name::AbstractString
     # Dict of tag attributes as name-value pairs
@@ -82,10 +82,10 @@ function string_value(pd::ETree, str::IOBuffer)
 end
 
 
-type XPHandle
-    parser::Union{XML_Parser,Void}
-    pdata::ETree
-    in_cdata::Bool
+mutable struct XPHandle
+  parser::Union{XML_Parser,Void}
+  pdata::ETree
+  in_cdata::Bool
 
     XPHandle(p) = new(p, ETree(""), false)
 end
@@ -284,7 +284,7 @@ end
 xp_parse(txt::AbstractString) = xp_parse(XML_ParserCreate(C_NULL), txt)
 xp_parse_ns(sep, txt::AbstractString) = xp_parse(XML_ParserCreateNS(C_NULL, sep), txt)
 
-function find{T<:AbstractString}(pd::ETree, path::T)
+function find(pd::ETree, path::T) where T<:AbstractString
     # What are we looking for?
     what = :node
     attr = ""
