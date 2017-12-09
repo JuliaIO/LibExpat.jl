@@ -1,4 +1,3 @@
-push!(LOAD_PATH, string(dirname(@__FILE__), "/../src"))
 using LibExpat
 using Compat
 using Compat.Test
