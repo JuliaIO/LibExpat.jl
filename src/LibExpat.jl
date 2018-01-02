@@ -3,12 +3,13 @@ __precompile__()
 module LibExpat
 
 using Compat
+using Compat.Unicode
 
 import Base: getindex, show, parse
 
-if Compat.Sys.iswindows() 
+if Compat.Sys.iswindows()
     const libexpat = "libexpat-1"
-elseif Compat.Sys.isunix() 
+elseif Compat.Sys.isunix()
     const libexpat = "libexpat"
 end
 
