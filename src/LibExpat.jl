@@ -5,10 +5,11 @@ module LibExpat
 using Compat
 
 import Base: getindex, show, parse
+import Compat.Unicode: isspace, isalpha, isalnum
 
-if Compat.Sys.iswindows() 
+if Compat.Sys.iswindows()
     const libexpat = "libexpat-1"
-elseif Compat.Sys.isunix() 
+elseif Compat.Sys.isunix()
     const libexpat = "libexpat"
 end
 
@@ -211,7 +212,7 @@ function attrs_in_to_dict(attrs_in::Ptr{Ptr{UInt8}})
             v = unsafe_string(attr)
 
             attrs[k] = v
-            
+
             i += 1
             attr = unsafe_load(attrs_in, i)
         end
