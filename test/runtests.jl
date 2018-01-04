@@ -77,6 +77,10 @@ pd = xp_parse(open(f -> read(f, String), joinpath(DATADIR,"utf8.xml")))
 @test isa(pd, ETree)
 println("PASSED 13")
 
+pd = xp_parse_ns(':', open(f -> read(f, String), joinpath(DATADIR,"t_s2.xml")))
+@test isa(pd, ETree)
+println("PASSED 13.1")
+
 
 pd = xp_parse(open(f -> read(f, String), joinpath(DATADIR,"wiki.xml")))
 @test isa(pd, ETree)

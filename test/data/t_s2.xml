@@ -1,4 +1,4 @@
-<xs:simpleType name="setDigitalPointType">
+<xs:simpleType name="setDigitalPointType" xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <xs:union>
         <xs:simpleType>
             <xs:restriction base="xs:string">
