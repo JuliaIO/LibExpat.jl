@@ -8,7 +8,7 @@
 
 # XPath Spec: http://www.w3.org/TR/xpath/
 
-import Base: typeseq, |
+import Base: |
 
 const xpath_axes = Dict(
     "ancestor" => :ancestor,
@@ -491,11 +491,11 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
         end
         if fn_ === nothing
             k, fn_, returntype = xpath_parse(xpath, i, ismacro)
-            if typeseq(returntype, Any)
+            if returntype == Any
                 fn_ = @xpath_fn :xpath_any fn_
-            elseif typeseq(returntype, ETree)
+            elseif returntype == ETree
                 fn_ = @xpath_fn :xpath fn_
-            elseif typeseq(returntype, AbstractString)
+            elseif returntype == AbstractString
                 if !ismacro && length(fn_) == 1 && fn_[1][1]::Symbol == :attribute
                     fn_ = fn_[1]
                 else
