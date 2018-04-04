@@ -984,7 +984,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
     elseif op == :xpath
         if output_hint == Bool
             return xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
-        elseif output_hint == Vector{ETree}) || output_hint == Vector || output_hint == Any
+        elseif output_hint == Vector{ETree} || output_hint == Vector || output_hint == Any
             out = ETree[]
             xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), out)
             return out
