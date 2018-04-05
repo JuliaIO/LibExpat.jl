@@ -8,7 +8,7 @@
 
 # XPath Spec: http://www.w3.org/TR/xpath/
 
-import Base: typeseq, |
+import Base: |
 
 const xpath_axes = Dict(
     "ancestor" => :ancestor,
@@ -491,11 +491,11 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
         end
         if fn_ === nothing
             k, fn_, returntype = xpath_parse(xpath, i, ismacro)
-            if typeseq(returntype, Any)
+            if returntype == Any
                 fn_ = @xpath_fn :xpath_any fn_
-            elseif typeseq(returntype, ETree)
+            elseif returntype == ETree
                 fn_ = @xpath_fn :xpath fn_
-            elseif typeseq(returntype, AbstractString)
+            elseif returntype == AbstractString
                 if !ismacro && length(fn_) == 1 && fn_[1][1]::Symbol == :attribute
                     fn_ = fn_[1]
                 else
@@ -982,9 +982,9 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
             return false
         end #if
     elseif op == :xpath
-        if typeseq(output_hint, Bool)
+        if output_hint == Bool
             return xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
-        elseif typeseq(output_hint,Vector{ETree}) || typeseq(output_hint,Vector) || typeseq(output_hint,Any)
+        elseif output_hint == Vector{ETree} || output_hint == Vector || output_hint == Any
             out = ETree[]
             xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), out)
             return out
@@ -992,9 +992,9 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
             assert(false, "unexpected output hint $output_hint")
         end
     elseif op == :xpath_str
-        if typeseq(output_hint, Bool)
+        if output_hint == Bool
             return xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
-        elseif typeseq(output_hint,Vector{AbstractString}) || typeseq(output_hint,Vector) || typeseq(output_hint,Any)
+        elseif output_hint == Vector{AbstractString} || output_hint == Vector || output_hint == Any
             out = AbstractString[]
             xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), out)
             return out
@@ -1002,9 +1002,9 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
             assert(false)
         end
     elseif op == :xpath_any
-        if typeseq(output_hint, Bool)
+        if output_hint == Bool
             return xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), Bool)::Bool
-        elseif typeseq(output_hint,Vector{Any}) || typeseq(output_hint,Vector) || typeseq(output_hint,Any)
+        elseif output_hint == Vector{Any} || output_hint == Vector || output_hint == Any
             out = Any[]
             xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), out)
             return out
