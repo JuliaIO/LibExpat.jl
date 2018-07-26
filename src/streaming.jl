@@ -34,7 +34,7 @@ XPCallbacks() = XPCallbacks(
 )
 
 
-function streaming_start_cdata(p_cbs::Ptr{Void})
+function streaming_start_cdata(p_cbs::Ptr{Nothing})
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
     h.cbs.start_cdata(h)
@@ -42,7 +42,7 @@ function streaming_start_cdata(p_cbs::Ptr{Void})
 end
 
 
-function streaming_end_cdata(p_cbs::Ptr{Void})
+function streaming_end_cdata(p_cbs::Ptr{Nothing})
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
     h.cbs.end_cdata(h)
@@ -50,7 +50,7 @@ function streaming_end_cdata(p_cbs::Ptr{Void})
 end
 
 
-function streaming_cdata(p_cbs::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
+function streaming_cdata(p_cbs::Ptr{Nothing}, s::Ptr{UInt8}, len::Cint)
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
 
     txt = unsafe_string(s, Int(len))
@@ -61,7 +61,7 @@ function streaming_cdata(p_cbs::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
 end
 
 
-function streaming_start_element(p_cbs::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
+function streaming_start_element(p_cbs::Ptr{Nothing}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
     h = unsafe_pointer_to_objref(p_cbs)::XPStreamHandler
     txt::AbstractString = unsafe_string(name)
     attrs::Dict{AbstractString,AbstractString} = attrs_in_to_dict(attrs_in)
@@ -72,7 +72,7 @@ function streaming_start_element(p_cbs::Ptr{Void}, name::Ptr{UInt8}, attrs_in::P
 end
 
 
-function streaming_end_element(p_h::Ptr{Void}, name::Ptr{UInt8})
+function streaming_end_element(p_h::Ptr{Nothing}, name::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt::AbstractString = unsafe_string(name)
 
@@ -81,7 +81,7 @@ function streaming_end_element(p_h::Ptr{Void}, name::Ptr{UInt8})
     return
 end
 
-function streaming_comment(p_h::Ptr{Void}, data::Ptr{UInt8})
+function streaming_comment(p_h::Ptr{Nothing}, data::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = unsafe_string(data)
 
@@ -91,7 +91,7 @@ function streaming_comment(p_h::Ptr{Void}, data::Ptr{UInt8})
 end
 
 
-function streaming_default(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
+function streaming_default(p_h::Ptr{Nothing}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = unsafe_string(data)
 
@@ -101,7 +101,7 @@ function streaming_default(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
 end
 
 
-function streaming_default_expand(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
+function streaming_default_expand(p_h::Ptr{Nothing}, data::Ptr{UInt8}, len::Cint)
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     txt = unsafe_string(data)
 
@@ -111,7 +111,7 @@ function streaming_default_expand(p_h::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
 end
 
 
-function streaming_start_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
+function streaming_start_namespace(p_h::Ptr{Nothing}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     prefix = unsafe_string(prefix)
     uri = unsafe_string(uri)
@@ -122,7 +122,7 @@ function streaming_start_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{
 end
 
 
-function streaming_end_namespace(p_h::Ptr{Void}, prefix::Ptr{UInt8})
+function streaming_end_namespace(p_h::Ptr{Nothing}, prefix::Ptr{UInt8})
     h = unsafe_pointer_to_objref(p_h)::XPStreamHandler
     prefix = unsafe_string(prefix)
 
@@ -137,16 +137,16 @@ end
 
 
 function make_parser(cbs::XPCallbacks,data=nothing,sep='\0')
-    cb_streaming_start_cdata = cfunction(streaming_start_cdata, Void, Tuple{Ptr{Void}})
-    cb_streaming_end_cdata = cfunction(streaming_end_cdata, Void, Tuple{Ptr{Void}})
-    cb_streaming_cdata = cfunction(streaming_cdata, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
-    cb_streaming_comment = cfunction(streaming_comment, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
-    cb_streaming_default = cfunction(streaming_default, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
-    cb_streaming_default_expand = cfunction(streaming_default_expand, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
-    cb_streaming_start_element = cfunction(streaming_start_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{Ptr{UInt8}}})
-    cb_streaming_end_element = cfunction(streaming_end_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
-    cb_streaming_start_namespace = cfunction(streaming_start_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{UInt8}})
-    cb_streaming_end_namespace = cfunction(streaming_end_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
+    cb_streaming_start_cdata = @cfunction(streaming_start_cdata, Nothing, (Ptr{Nothing},))
+    cb_streaming_end_cdata = @cfunction(streaming_end_cdata, Nothing, (Ptr{Nothing},))
+    cb_streaming_cdata = @cfunction(streaming_cdata, Nothing, (Ptr{Nothing}, Ptr{UInt8}, Cint,))
+    cb_streaming_comment = @cfunction(streaming_comment, Nothing, (Ptr{Nothing}, Ptr{UInt8},))
+    cb_streaming_default = @cfunction(streaming_default, Nothing, (Ptr{Nothing}, Ptr{UInt8}, Cint,))
+    cb_streaming_default_expand = @cfunction(streaming_default_expand, Nothing, (Ptr{Nothing}, Ptr{UInt8}, Cint,))
+    cb_streaming_start_element = @cfunction(streaming_start_element, Nothing, (Ptr{Nothing}, Ptr{UInt8}, Ptr{Ptr{UInt8}},))
+    cb_streaming_end_element = @cfunction(streaming_end_element, Nothing, (Ptr{Nothing}, Ptr{UInt8},))
+    cb_streaming_start_namespace = @cfunction(streaming_start_namespace, Nothing, (Ptr{Nothing}, Ptr{UInt8}, Ptr{UInt8},))
+    cb_streaming_end_namespace = @cfunction(streaming_end_namespace, Nothing, (Ptr{Nothing}, Ptr{UInt8},))
     
     p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
     if (p == C_NULL) error("XML_ParserCreate failed") end
