@@ -15,7 +15,7 @@ end
 @ctypedef XML_LChar UInt8
 @ctypedef XML_Index Int32
 @ctypedef XML_Size UInt32
-@ctypedef XML_Parser Ptr{Void}
+@ctypedef XML_Parser Ptr{Nothing}
 @ctypedef XML_Bool UInt8
 # enum XML_Status
 const XML_STATUS_ERROR = 0
@@ -79,40 +79,40 @@ const XML_CQUANT_OPT = 1
 const XML_CQUANT_REP = 2
 const XML_CQUANT_PLUS = 3
 # end
-@ctypedef XML_Content Void
-@ctypedef XML_ElementDeclHandler Ptr{Void}
-@ctypedef XML_AttlistDeclHandler Ptr{Void}
-@ctypedef XML_XmlDeclHandler Ptr{Void}
+@ctypedef XML_Content Nothing
+@ctypedef XML_ElementDeclHandler Ptr{Nothing}
+@ctypedef XML_AttlistDeclHandler Ptr{Nothing}
+@ctypedef XML_XmlDeclHandler Ptr{Nothing}
 mutable struct XML_Memory_Handling_Suite
-    malloc_fcn::Ptr{Void}
-    realloc_fcn::Ptr{Void}
-    free_fcn::Ptr{Void}
+    malloc_fcn::Ptr{Nothing}
+    realloc_fcn::Ptr{Nothing}
+    free_fcn::Ptr{Nothing}
 end
-@ctypedef XML_StartElementHandler Ptr{Void}
-@ctypedef XML_EndElementHandler Ptr{Void}
-@ctypedef XML_CharacterDataHandler Ptr{Void}
-@ctypedef XML_ProcessingInstructionHandler Ptr{Void}
-@ctypedef XML_CommentHandler Ptr{Void}
-@ctypedef XML_StartCdataSectionHandler Ptr{Void}
-@ctypedef XML_EndCdataSectionHandler Ptr{Void}
-@ctypedef XML_DefaultHandler Ptr{Void}
-@ctypedef XML_StartDoctypeDeclHandler Ptr{Void}
-@ctypedef XML_EndDoctypeDeclHandler Ptr{Void}
-@ctypedef XML_EntityDeclHandler Ptr{Void}
-@ctypedef XML_UnparsedEntityDeclHandler Ptr{Void}
-@ctypedef XML_NotationDeclHandler Ptr{Void}
-@ctypedef XML_StartNamespaceDeclHandler Ptr{Void}
-@ctypedef XML_EndNamespaceDeclHandler Ptr{Void}
-@ctypedef XML_NotStandaloneHandler Ptr{Void}
-@ctypedef XML_ExternalEntityRefHandler Ptr{Void}
-@ctypedef XML_SkippedEntityHandler Ptr{Void}
+@ctypedef XML_StartElementHandler Ptr{Nothing}
+@ctypedef XML_EndElementHandler Ptr{Nothing}
+@ctypedef XML_CharacterDataHandler Ptr{Nothing}
+@ctypedef XML_ProcessingInstructionHandler Ptr{Nothing}
+@ctypedef XML_CommentHandler Ptr{Nothing}
+@ctypedef XML_StartCdataSectionHandler Ptr{Nothing}
+@ctypedef XML_EndCdataSectionHandler Ptr{Nothing}
+@ctypedef XML_DefaultHandler Ptr{Nothing}
+@ctypedef XML_StartDoctypeDeclHandler Ptr{Nothing}
+@ctypedef XML_EndDoctypeDeclHandler Ptr{Nothing}
+@ctypedef XML_EntityDeclHandler Ptr{Nothing}
+@ctypedef XML_UnparsedEntityDeclHandler Ptr{Nothing}
+@ctypedef XML_NotationDeclHandler Ptr{Nothing}
+@ctypedef XML_StartNamespaceDeclHandler Ptr{Nothing}
+@ctypedef XML_EndNamespaceDeclHandler Ptr{Nothing}
+@ctypedef XML_NotStandaloneHandler Ptr{Nothing}
+@ctypedef XML_ExternalEntityRefHandler Ptr{Nothing}
+@ctypedef XML_SkippedEntityHandler Ptr{Nothing}
 mutable struct XML_Encoding
-    map::Void
-    data::Ptr{Void}
-    convert::Ptr{Void}
-    release::Ptr{Void}
+    map::Nothing
+    data::Ptr{Nothing}
+    convert::Ptr{Nothing}
+    release::Ptr{Nothing}
 end
-@ctypedef XML_UnknownEncodingHandler Ptr{Void}
+@ctypedef XML_UnknownEncodingHandler Ptr{Nothing}
 # enum XML_Parsing
 const XML_INITIALIZED = 0
 const XML_PARSING = 1
