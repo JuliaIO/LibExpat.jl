@@ -1168,7 +1168,7 @@ function xpath(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vector{SymbolA
             return false
         end
     else
-        assert(nodetype_filter === :node)
+        @assert(nodetype_filter === :node)
     end
     if index > length(filter)
         return xpath_output(pd, output)

@@ -51,7 +51,7 @@ Base.@deprecate_binding ParsedData ETree
 function show(io::IO, pd::ETree)
     print(io,'<',pd.name)
     for (name,value) in pd.attr
-        print(io,' ',name,'=','"',replace(value,'"',"&quot;"),'"')
+        print(io,' ',name,'=','"',replace(value, '"' => "&quot;"),'"')
     end
     if length(pd.elements) == 0
         print(io,'/','>')
@@ -61,7 +61,7 @@ function show(io::IO, pd::ETree)
             if isa(ele, ETree)
                 show(io, ele)
             else
-                print(io, replace(ele,'<',"&lt;"))
+                print(io, replace(ele, '<' => "&lt;"))
             end
         end
         print(io,'<','/',pd.name,'>')
@@ -82,7 +82,7 @@ end
 
 
 mutable struct XPHandle
-  parser::Union{XML_Parser,Void}
+  parser::Union{XML_Parser,Nothing}
   pdata::ETree
   in_cdata::Bool
 
@@ -90,44 +90,8 @@ mutable struct XPHandle
 end
 
 
-function xp_make_parser(sep='\0')
-    cb_start_cdata = cfunction(start_cdata, Void, Tuple{Ptr{Void}})
-    cb_end_cdata = cfunction(end_cdata, Void, Tuple{Ptr{Void}})
-    cb_cdata = cfunction(cdata, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
-    cb_comment = cfunction(comment, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
-    cb_default = cfunction(default, Void,  Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
-    cb_default_expand = cfunction(default_expand, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Cint})
-    cb_start_element = cfunction(start_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{Ptr{UInt8}}})
-    cb_end_element = cfunction(end_element, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
-    cb_start_namespace = cfunction(start_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}, Ptr{UInt8}})
-    cb_end_namespace = cfunction(end_namespace, Void, Tuple{Ptr{Void}, Ptr{UInt8}})
 
-    p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
-    if (p == C_NULL) error("XML_ParserCreate failed") end
-
-    xph = XPHandle(p)
-    p_xph = pointer_from_objref(xph)
-    XML_SetUserData(p, p_xph);
-
-    XML_SetCdataSectionHandler(p, cb_start_cdata, cb_end_cdata)
-    XML_SetCharacterDataHandler(p, cb_cdata)
-    XML_SetCommentHandler(p, cb_comment)
-    XML_SetDefaultHandler(p, cb_default)
-    XML_SetDefaultHandlerExpand(p, cb_default_expand)
-    XML_SetElementHandler(p, cb_start_element, cb_end_element)
-#    XML_SetExternalEntityRefHandler(p, f_ExternaEntity)
-    XML_SetNamespaceDeclHandler(p, cb_start_namespace, cb_end_namespace)
-#    XML_SetNotationDeclHandler(p, f_NotationDecl)
-#    XML_SetNotStandaloneHandler(p, f_NotStandalone)
-#    XML_SetProcessingInstructionHandler(p, f_ProcessingInstruction)
-#    XML_SetUnparsedEntityDeclHandler(p, f_UnparsedEntityDecl)
-#    XML_SetStartDoctypeDeclHandler(p, f_StartDoctypeDecl)
-
-    return xph
-end
-
-
-function xp_geterror(p::Union{XML_Parser,Void})
+function xp_geterror(p::Union{XML_Parser,Nothing})
     ec = XML_GetErrorCode(p)
 
     if ec != 0
@@ -153,20 +117,20 @@ function xp_close(xph::XPHandle)
 end
 
 
-function start_cdata(p_xph::Ptr{Void})
+function start_cdata(p_xph::Ptr{Nothing})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     xph.in_cdata = true
     return
 end
 
-function end_cdata(p_xph::Ptr{Void})
+function end_cdata(p_xph::Ptr{Nothing})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     xph.in_cdata = false
     return
 end
 
 
-function cdata(p_xph::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
+function cdata(p_xph::Ptr{Nothing}, s::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
 
     txt = unsafe_string(s, Int(len))
@@ -176,21 +140,21 @@ function cdata(p_xph::Ptr{Void}, s::Ptr{UInt8}, len::Cint)
 end
 
 
-function comment(p_xph::Ptr{Void}, data::Ptr{UInt8})
+function comment(p_xph::Ptr{Nothing}, data::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = unsafe_string(data)
     return
 end
 
 
-function default(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
+function default(p_xph::Ptr{Nothing}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = unsafe_string(data)
     return
 end
 
 
-function default_expand(p_xph::Ptr{Void}, data::Ptr{UInt8}, len::Cint)
+function default_expand(p_xph::Ptr{Nothing}, data::Ptr{UInt8}, len::Cint)
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = unsafe_string(data)
     return
@@ -221,7 +185,7 @@ function attrs_in_to_dict(attrs_in::Ptr{Ptr{UInt8}})
     return attrs
 end
 
-function start_element(p_xph::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
+function start_element(p_xph::Ptr{Nothing}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UInt8}})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     name = unsafe_string(name)
 
@@ -237,7 +201,7 @@ function start_element(p_xph::Ptr{Void}, name::Ptr{UInt8}, attrs_in::Ptr{Ptr{UIn
 end
 
 
-function end_element(p_xph::Ptr{Void}, name::Ptr{UInt8})
+function end_element(p_xph::Ptr{Nothing}, name::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     txt = unsafe_string(name)
 
@@ -247,7 +211,7 @@ function end_element(p_xph::Ptr{Void}, name::Ptr{UInt8})
 end
 
 
-function start_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
+function start_namespace(p_xph::Ptr{Nothing}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = unsafe_string(prefix)
     uri = unsafe_string(uri)
@@ -255,7 +219,7 @@ function start_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8}, uri::Ptr{UInt8})
 end
 
 
-function end_namespace(p_xph::Ptr{Void}, prefix::Ptr{UInt8})
+function end_namespace(p_xph::Ptr{Nothing}, prefix::Ptr{UInt8})
     xph = unsafe_pointer_to_objref(p_xph)::XPHandle
     prefix = unsafe_string(prefix)
     return
@@ -386,5 +350,41 @@ end
 include("xpath.jl")
 
 include("streaming.jl")
+
+function xp_make_parser(sep='\0')
+    cb_start_cdata = @cfunction(start_cdata, Nothing, (Ptr{Nothing},))
+    cb_end_cdata = @cfunction(end_cdata, Nothing, (Ptr{Nothing},))
+    cb_cdata = @cfunction(cdata, Nothing, (Ptr{Nothing}, Ptr{UInt8}, Cint))
+    cb_comment = @cfunction(comment, Nothing, (Ptr{Nothing}, Ptr{UInt8}))
+    cb_default = @cfunction(default, Nothing,  (Ptr{Nothing}, Ptr{UInt8}, Cint))
+    cb_default_expand = @cfunction(default_expand, Nothing, (Ptr{Nothing}, Ptr{UInt8}, Cint))
+    cb_start_element = @cfunction(start_element, Nothing, (Ptr{Nothing}, Ptr{UInt8}, Ptr{Ptr{UInt8}}))
+    cb_end_element = @cfunction(end_element, Nothing, (Ptr{Nothing}, Ptr{UInt8}))
+    cb_start_namespace = @cfunction(start_namespace, Nothing, (Ptr{Nothing}, Ptr{UInt8}, Ptr{UInt8}))
+    cb_end_namespace = @cfunction(end_namespace, Nothing, (Ptr{Nothing}, Ptr{UInt8}))
+
+    p::XML_Parser = (sep == '\0') ? XML_ParserCreate(C_NULL) : XML_ParserCreateNS(C_NULL, sep);
+    if (p == C_NULL) error("XML_ParserCreate failed") end
+
+    xph = XPHandle(p)
+    p_xph = pointer_from_objref(xph)
+    XML_SetUserData(p, p_xph);
+
+    XML_SetCdataSectionHandler(p, cb_start_cdata, cb_end_cdata)
+    XML_SetCharacterDataHandler(p, cb_cdata)
+    XML_SetCommentHandler(p, cb_comment)
+    XML_SetDefaultHandler(p, cb_default)
+    XML_SetDefaultHandlerExpand(p, cb_default_expand)
+    XML_SetElementHandler(p, cb_start_element, cb_end_element)
+#    XML_SetExternalEntityRefHandler(p, f_ExternaEntity)
+    XML_SetNamespaceDeclHandler(p, cb_start_namespace, cb_end_namespace)
+#    XML_SetNotationDeclHandler(p, f_NotationDecl)
+#    XML_SetNotStandaloneHandler(p, f_NotStandalone)
+#    XML_SetProcessingInstructionHandler(p, f_ProcessingInstruction)
+#    XML_SetUnparsedEntityDeclHandler(p, f_UnparsedEntityDecl)
+#    XML_SetStartDoctypeDeclHandler(p, f_StartDoctypeDecl)
+
+    return xph
+end
 
 end
