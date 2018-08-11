@@ -85,9 +85,9 @@ end
 const xpath_separators = Set(['+','(',')','[',']','<','>','!','=','|','/','*',','])
 
 function xpath_parse(xpath::T, ismacro=false) where T<:AbstractString
-    k = start(xpath)
+    k = firstindex(xpath)
     k, parsed, returntype, has_last_fn = xpath_parse_expr(xpath, k, 0, ismacro)
-    if !done(xpath,k)
+    if k ≤ ncodeunits(xpath) # assume that xpath_parse_expr uses proper character indexing
         error("failed to parse to the end of the xpath (stopped at $k)")
     end
     return parsed, returntype
