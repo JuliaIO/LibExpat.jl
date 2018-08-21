@@ -70,14 +70,17 @@ macro xpath_str(xpath)
     xp, returntype = xpath_parse(xpath, true)
     :( XPath{$(typeof(xpath)), $(returntype)}($(xp)) )
 end
+
 function consume_whitespace(xpath, k)
     #consume leading space
-    while !done(xpath, k)
-        c, k2 = next(xpath, k)
+    res = iterate(xpath, k)
+    while res !== nothing
+        c, k2 = res
         if !isspace(c)
             break
         end
         k = k2
+        res = iterate(xpath, k)
     end
     k
 end
@@ -144,18 +147,19 @@ function xpath_parse(xpath::T, k, ismacro) where T<:AbstractString
         parsed = SymbolAny[]
     end
     k = consume_whitespace(xpath, k)
-    if done(xpath,k)
+    res = iterate(xpath, k)
+    if res === nothing
         error("empty xpath expressions is not valid")
     end
     # 1. Consume root node
-    c, k2 = next(xpath,k)
+    c, k2 = res
     if c == '/'
         @xpath_parse :root :node
         k = k2
     end
     returntype::DataType = ETree
     first::Bool = true
-    while !done(xpath,k)
+    while iterate(xpath, k) !== nothing
         # i..j has text, k is current character
         havename::Bool = false
         axis::Symbol = :child
@@ -164,7 +168,7 @@ function xpath_parse(xpath::T, k, ismacro) where T<:AbstractString
         dot::Bool = false
         parens::Bool = false
         name::T = ""
-        c, k2 = next(xpath,k)
+        c, k2 = iterate(xpath, k)
         i = k
         j = 0
         if c == '/'
@@ -173,8 +177,8 @@ function xpath_parse(xpath::T, k, ismacro) where T<:AbstractString
             i = k = k2 #advance to next
         end
         # 2. Consume node name
-        while !done(xpath,k)
-            c, k2 = next(xpath,k)
+        while iterate(xpath, k) !== nothing
+            c, k2 = iterate(xpath,k)
             if c == ':'
                 # 2a. Consume axis name
                 if !havename && j == 0
@@ -213,17 +217,17 @@ function xpath_parse(xpath::T, k, ismacro) where T<:AbstractString
                     break
                 elseif isspace(c) || in(c, xpath_separators)
                     if j != 0
-                        assert(!havename)
+                        @assert(!havename)
                         havename = true
                         name = xpath[i:j]
                         j = 0
                     end
                     if c == '('
                         k2 = consume_whitespace(xpath, k2)
-                        if done(xpath,k2)
+                        if iterate(xpath,k2) === nothing
                             error("unexpected end to xpath after (")
                         end
-                        c, k3 = next(xpath,k2)
+                        c, k3 = iterate(xpath,k2)
                         if c != ')'
                             error("unexpected character before ) in nodetype() expression at $k2")
                         end
@@ -249,7 +253,7 @@ function xpath_parse(xpath::T, k, ismacro) where T<:AbstractString
                 havename = true
                 name = xpath[i:j]
             elseif first != true
-                if done(xpath,k)
+                if iterate(xpath,k) === nothing
                     error("xpath should not end with a /")
                 end
                 error("expected name before $c at $k")
@@ -257,7 +261,7 @@ function xpath_parse(xpath::T, k, ismacro) where T<:AbstractString
                 break
             end
         elseif j!=0
-            assert(false)
+            @assert(false)
         end
         first = false
         if parens
@@ -299,13 +303,13 @@ function xpath_parse(xpath::T, k, ismacro) where T<:AbstractString
             end
             returntype = ETree
         end #if
-        while !done(xpath,k)
-            c, k2 = next(xpath,k)
+        while iterate(xpath,k) !== nothing
+            c, k2 = iterate(xpath,k)
             if isspace(c)
                 k = k2
                 continue
             elseif c == '/'
-                if done(xpath,k)
+                if iterate(xpath,k) === nothing
                     error("xpath should not end with a /")
                 #elseif returntype !== ETree # this is a valid XPath
                 #    error("xpath has an unexpected / at $k -- previous selector does not return a Node")
@@ -334,16 +338,16 @@ function xpath_parse(xpath::T, k, ismacro) where T<:AbstractString
                     @xpath_parse :filter filter
                 end
                 k = consume_whitespace(xpath, k)
-                if done(xpath, k)
+                if iterate(xpath, k) === nothing
                     error("unmatched ] at $i")
                 end
-                c, k2 = next(xpath, k)
+                c, k2 = iterate(xpath, k)
                 if (c != ']')
                     error("expected matching ] at $k for [ at $i, found $c")
                 end
                 k = k2
-                if !done(xpath, k)
-                    c, k2 = next(xpath, k)
+                if iterate(xpath, k) !== nothing
+                    c, k2 = iterate(xpath, k)
                 end
             else
                 return k, parsed, returntype #hope something else can parse it
@@ -357,8 +361,8 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
     i = k = consume_whitespace(xpath, k)
     j = 0
     prevtokenspecial = true
-    while !done(xpath, k)
-        c, k2 = next(xpath, k)
+    while iterate(xpath, k) !== nothing
+        c, k2 = iterate(xpath, k)
         if prevtokenspecial && c == '*'
             nothing
         elseif c == '@' || c == ':'
@@ -376,10 +380,10 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
                 end
                 j = k
                 k = k2
-                if done(xpath, k)
+                if iterate(xpath, k) === nothing
                     error("unterminated string literal $c at $k")
                 end
-                c2, k2 = next(xpath, k)
+                c2, k2 = iterate(xpath, k)
             end
             k = k2
             break
@@ -397,11 +401,11 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
         error("expected expression at $k")
     end
     k = consume_whitespace(xpath, k)
-    if done(xpath, k)
+    if iterate(xpath, k) === nothing
         c = '\0'
         k2 = k
     else
-        c, k2 = next(xpath, k)
+        c, k2 = iterate(xpath, k)
     end
     has_fn_last::Bool = false
     #if ismacro
@@ -420,22 +424,22 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
             sexpr = Expr(:call, :string)
             escape = false
             var = parenvar = false
-            substr_k = next(xpath, i)[2]
-            j = next(xpath, j)[2]
+            substr_k = iterate(xpath, i)[2]
+            j = iterate(xpath, j)[2]
             while substr_k != j
-                c, substr_k = next(xpath,substr_k)
+                c, substr_k = iterate(xpath,substr_k)
                 if var == true
-                    if nb_available(str) == 0
+                    if bytesavailable(str) == 0
                         if !parenvar && c == '('
                             parenvar = true
                             continue
                         end
-                        if !isalpha(c) && c!="_"
+                        if !isletter(c) && c!="_"
                             error("invalid interpolation syntax at $substr_k")
                         end
                         write(str,c)
                         continue
-                    elseif !isalnum(c) && c!='_' && c!='!'
+                    elseif !isletter(c) && !isnumeric(c) && c!='_' && c!='!'
                         push!(sexpr.args, Expr(:call,:string,esc(Symbol(String(take!(str))))))
                         var = false
                         if parenvar
@@ -460,17 +464,17 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
                     if c == '$'
                         var = true
                         parenvar = false
-                        nb_available(str) != 0 && push!(sexpr.args, String(take!(str)))
+                        bytesavailable(str) != 0 && push!(sexpr.args, String(take!(str)))
                     else
                         write(str,c)
                     end
                 end
             end
             if var == true
-                (nb_available(str) != 0 && !parenvar) || error("invalid interpolation syntax at $j")
+                (bytesavailable(str) != 0 && !parenvar) || error("invalid interpolation syntax at $j")
                 push!(sexpr.args, Expr(:call,:string,esc(Symbol(String(take!(str))))))
             else
-                nb_available(str) != 0 && push!(sexpr.args, String(take!(str)))
+                bytesavailable(str) != 0 && push!(sexpr.args, String(take!(str)))
             end
             if length(sexpr.args) == 1
                 sexpr = ""
@@ -478,7 +482,7 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
                 sexpr = sexpr.args[2]
             end
         else
-            sexpr = xpath[next(xpath,i)[2]:j]
+            sexpr = xpath[iterate(xpath,i)[2]:j]
         end
         fn = @xpath_fn :string sexpr
         returntype = AbstractString
@@ -502,7 +506,7 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
                     fn_ = @xpath_fn :xpath_str fn_
                 end
             else
-                assert(false)
+                @assert(false)
             end
             returntype = Vector{returntype}
         end
@@ -513,21 +517,21 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
         end
     end
     k = consume_whitespace(xpath, k)
-    while !done(xpath,k)
-        c1,k1 = next(xpath,k)
+    while iterate(xpath,k) !== nothing
+        c1,k1 = iterate(xpath,k)
         if c1 == ']' || c1 == ')' || c1 == ','
             break
         end
-        if done(xpath,k2)
+        if iterate(xpath,k2) === nothing
             error("unexpected end to xpath")
         end
-        c2,k2 = next(xpath,k1)
+        c2,k2 = iterate(xpath,k1)
         i = k #backup k
         if c1 == 'o' && c2 == 'r' # lowest precedence (0)
-            if done(xpath,k2)
+            if iterate(xpath,k2) === nothing
                 error("unexpected end to xpath")
             end
-            c3,k3 = next(xpath,k2)
+            c3,k3 = iterate(xpath,k2)
             if !isspace(c3)
                 error("expected a space after operator at $k")
             end
@@ -537,17 +541,17 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
             returntype = Bool
 
         elseif c1 == 'a' && c2 == 'n'
-            if done(xpath,k2)
+            if iterate(xpath,k2) === nothing
                 error("unexpected end to xpath")
             end
-            c3,k3 = next(xpath,k2)
+            c3,k3 = iterate(xpath,k2)
             if c3 != 'd'
                 error("invalid operator $c at $k")
             end
-            if done(xpath,k3)
+            if iterate(xpath,k3) === nothing
                 error("unexpected end to xpath")
             end
-            c3,k2 = next(xpath,k3)
+            c3,k2 = iterate(xpath,k3)
             if !isspace(c3)
                 error("expected a space after operator at $k")
             end
@@ -600,11 +604,11 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
             returntype = Number
 
         else # highest precedence (5)
-            if done(xpath,k2)
+            if iterate(xpath,k2) === nothing
                 error("unexpected end to xpath")
             end
-            c3,k3 = next(xpath,k2)
-            if done(xpath,k3)
+            c3,k3 = iterate(xpath,k2)
+            if iterate(xpath,k3) === nothing
                 error("unexpected end to xpath")
             end
             op_precedence = 5
@@ -615,7 +619,7 @@ function xpath_parse_expr(xpath::T, k, precedence::Int, ismacro) where T<:Abstra
             else
                 error("invalid operator $c1 at $k")
             end
-            c4,k = next(xpath,k3)
+            c4,k = iterate(xpath,k3)
             if !isspace(c4)
                 error("expected a space after operator at $k")
             end
@@ -641,7 +645,7 @@ end
 function consume_function(xpath, k, name, ismacro)
     #consume a function call
     k = consume_whitespace(xpath, k)
-    if done(xpath,k)
+    if iterate(xpath,k) === nothing
         error("unexpected end to xpath after (")
     end
     fntype = get(xpath_functions, name, nothing)
@@ -657,7 +661,7 @@ function consume_function(xpath, k, name, ismacro)
         args = SymbolAny[]
     end
 
-    c, k2 = next(xpath,k)
+    c, k2 = iterate(xpath,k)
     if c == ','
         error("unexpected , in functions args at $k")
     end
@@ -673,10 +677,10 @@ function consume_function(xpath, k, name, ismacro)
         len_args += 1
         has_fn_last |= has_fn_last2
         k = consume_whitespace(xpath, k)
-        if done(xpath,k)
+        if iterate(xpath,k) === nothing
             error("unexpected end to xpath after (")
         end
-        c, k2 = next(xpath, k)
+        c, k2 = iterate(xpath, k)
         if c != ',' && c != ')'
             error("unexpected character $c at $k")
         end
@@ -861,10 +865,10 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
     elseif op == :string
         return args::AbstractString
     elseif op == :position
-        assert(position > 0)
+        @assert(position > 0)
         return position
     elseif op == :last
-        assert(last >= 0)
+        @assert(last >= 0)
         return last
     elseif op == :count
         result = xpath_expr(pd, xp, args[1]::SymbolAny, position, last, Vector)::Vector
@@ -921,7 +925,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
                         elseif isa(b, AbstractString)
                             a = xpath_string(a)
                         else
-                            assert(false)
+                            @assert(false)
                         end
                     elseif isa(b, ETree)
                         if isa(a, Int) || isa(a, Float64)
@@ -931,7 +935,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
                         elseif isa(a, AbstractString)
                             b = xpath_string(b)
                         else
-                            assert(false)
+                            @assert(false)
                         end
                     end #if
                     if op == :(=) || op == :(!=)
@@ -974,7 +978,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
                                 return true
                             end
                         else
-                            assert(false)
+                            @assert(false)
                         end
                     end #if
                 end #for b
@@ -989,7 +993,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
             xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), out)
             return out
         else
-            assert(false, "unexpected output hint $output_hint")
+            @assert(false, "unexpected output hint $output_hint")
         end
     elseif op == :xpath_str
         if output_hint == Bool
@@ -999,7 +1003,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
             xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), out)
             return out
         else
-            assert(false)
+            @assert(false)
         end
     elseif op == :xpath_any
         if output_hint == Bool
@@ -1009,7 +1013,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
             xpath(pd, :node, xp, args::Vector{SymbolAny}, 1, Int[], 1, XPath_Collector(), out)
             return out
         else
-            assert(false, "unexpected output hint $output_hint")
+            @assert(false, "unexpected output hint $output_hint")
         end
     elseif op == :string_fn
         if length(args) == 0
@@ -1117,7 +1121,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
     else
         error("invalid or unimplmented op $op")
     end
-    assert(false)
+    @assert(false)
 end
 
 function xpath_output(pd::ETree, output)
@@ -1210,13 +1214,13 @@ function xpath(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vector{SymbolA
 
     elseif axis == :filter_with_last
         if collector.filter === nothing
-            assert(collector.index == 0)
+            @assert(collector.index == 0)
             collector.nodes = ETree[]
             collector.filter = name::SymbolAny
             collector.index = index
         else
-            assert(collector.filter === name)
-            assert(collector.index === index)
+            @assert(collector.filter === name)
+            @assert(collector.index === index)
         end
         push!(collector.nodes, pd)
         iscounted = false
@@ -1284,7 +1288,7 @@ function xpath(pd, nodetype_filter::Symbol, xp::XPath{T}, filter::Vector{SymbolA
                 elseif isa(child, AbstractString)
                     @xpath child::AbstractString
                 else
-                    assert(false)
+                    @assert(false)
                 end
             end
         elseif axis == :descendant
@@ -1346,7 +1350,7 @@ function xpath_descendant(pd::ETree, name::Symbol, xp::XPath, filter::Vector{Sym
         elseif isa(child, AbstractString)
             @xpath child::AbstractString
         else
-            assert(false)
+            @assert(false)
         end
     end
     iscounted
