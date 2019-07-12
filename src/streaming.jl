@@ -194,10 +194,14 @@ function free(h::XPStreamHandler)
 end
 
 function parsefile(filename::AbstractString,callbacks::XPCallbacks; bufferlines=1024, data=nothing)
-    h = make_parser(callbacks, data)
     # TODO: Support suspending for files too
-    suspended = false
     file = open(filename, "r")
+    parsestream(file,callbacks; bufferlines=bufferlines, data=data)
+end
+
+function parsestream(file::IO,callbacks::XPCallbacks; bufferlines=1024, data=nothing)
+    h = make_parser(callbacks, data)
+    suspended = false
     try
         io = IOBuffer()
         while !eof(file)
@@ -205,6 +209,7 @@ function parsefile(filename::AbstractString,callbacks::XPCallbacks; bufferlines=
             truncate(io, 0)
             while i < bufferlines && !eof(file)
                 write(io, readline(file))
+                write(io, "\n")
                 i += 1
             end
             txt = String(take!(copy(io)))
