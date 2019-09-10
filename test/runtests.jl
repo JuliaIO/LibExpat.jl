@@ -1,6 +1,4 @@
-using LibExpat
-using Compat
-using Compat.Test
+using LibExpat, Test
 
 const DATADIR = joinpath(@__DIR__, "data")
 
