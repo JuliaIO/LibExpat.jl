@@ -1,17 +1,10 @@
 __precompile__()
 
 module LibExpat
-
-using Compat
-using Compat.Unicode
+using Pkg.Artifacts
+using Expat_jll
 
 import Base: getindex, show, parse
-
-if Compat.Sys.iswindows()
-    const libexpat = "libexpat-1"
-elseif Compat.Sys.isunix()
-    const libexpat = "libexpat"
-end
 
 include("lX_common_h.jl")
 include("lX_defines_h.jl")
