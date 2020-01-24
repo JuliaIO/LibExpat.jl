@@ -1,9 +1,6 @@
 LibExpat - Julia wrapper for libexpat
 =====================================
 
-[![LibExpat](http://pkg.julialang.org/badges/LibExpat_0.4.svg)](http://pkg.julialang.org/?pkg=LibExpat)
-[![LibExpat](http://pkg.julialang.org/badges/LibExpat_0.5.svg)](http://pkg.julialang.org/?pkg=LibExpat)
-[![LibExpat](http://pkg.julialang.org/badges/LibExpat_0.6.svg)](http://pkg.julialang.org/?pkg=LibExpat)
 [![Build Status](https://travis-ci.org/JuliaIO/LibExpat.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/LibExpat.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/uqngo92sbbno0lyl/branch/master?svg=true)](https://ci.appveyor.com/project/Keno/libexpat-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/JuliaIO/LibExpat.jl/badge.svg)](https://coveralls.io/github/JuliaIO/LibExpat.jl)
