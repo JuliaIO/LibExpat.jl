@@ -22,7 +22,7 @@ wc = wrap_c.init(
     clang_extraargs,
     (th, h) ->
     begin
-        if search(h, "expat") == 0:-1
+        if something(findfirst("expat", h), 0:-1) == 0:-1
             return false
         else
 #            println("th : $th, h : $h")

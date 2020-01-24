@@ -1025,7 +1025,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
     elseif op == :contains
         a = xpath_string(xpath_expr(pd, xp, args[1]::SymbolAny, position, last, Any))::AbstractString
         b = xpath_string(xpath_expr(pd, xp, args[2]::SymbolAny, position, last, Any))::AbstractString
-        return !(isempty(search(a, b)))::Bool
+        return !(isempty(something(findfirst(b, a), 0:-1)))::Bool
     elseif op == :startswith
         a = xpath_string(xpath_expr(pd, xp, args[1]::SymbolAny, position, last, Any))::AbstractString
         b = xpath_string(xpath_expr(pd, xp, args[2]::SymbolAny, position, last, Any))::AbstractString
@@ -1050,7 +1050,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
     elseif op == :substring_before
         a = xpath_string(xpath_expr(pd, xp, args[1]::SymbolAny, position, last, Any))::AbstractString
         b = xpath_string(xpath_expr(pd, xp, args[2]::SymbolAny, position, last, Any))::AbstractString
-        i = first(search(a,b))
+        i = first(something(findfirst(b, a), 0:-1))
         if i < 1
             return ""
         else
@@ -1059,7 +1059,7 @@ function xpath_expr(pd, xp::XPath{T}, filter::Tuple{Symbol,Any}, position::Int, 
     elseif op == :substring_after
         a = xpath_string(xpath_expr(pd, xp, args[1]::SymbolAny, position, last, Any))::AbstractString
         b = xpath_string(xpath_expr(pd, xp, args[2]::SymbolAny, position, last, Any))::AbstractString
-        i = last(search(a,b))
+        i = last(something(findfirst(b, a), 0:-1))
         if i < 1
             return ""
         else
