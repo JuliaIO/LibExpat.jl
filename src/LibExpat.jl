@@ -15,7 +15,7 @@ export ETree, xp_parse, xpath, @xpath_str
 
 # streaming
 export XPCallbacks, XPStreamHandler,
-       parse, stop, pause, resume, free, parsefile
+       parse, stop, pause, resume, free, parsefile, parsestream
 
 const SymbolAny = Tuple{Symbol,Any}
 
